@@ -1,0 +1,230 @@
+/* Stil pentru pagina de coș */
+.cart-wrapper {
+    min-height: 70vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: none;
+}
+.cart-card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(224,183,183,0.18);
+    padding: 40px 32px 32px 32px;
+    min-width: 320px;
+    max-width: 350px;
+    margin: 0 auto;
+    text-align: center;
+    border: 2px solid #e0b7b7;
+}
+.cart-card h2 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1.5em;
+}
+.cart-card p {
+    margin: 0;
+    font-size: 1.1em;
+}
+/* Icon coș de cumpărături în meniu */
+.cart-icon {
+    float: right;
+    margin-left: 18px;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    color: #7d4c4c;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.cart-icon:hover {
+    color: #b97a7a;
+}
+nav .login-link {
+    float: right;
+    margin-left: 10px;
+}
+@media (max-width: 600px) {
+    .cart-icon {
+        margin-left: 8px;
+    }
+}
+/* Stil pentru butonul Guest */
+.guest-btn {
+    background: #7d4c4c;
+    color: #fff;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.2s;
+}
+.guest-btn:hover {
+    background: #b97a7a;
+}
+/* Stiluri pentru secțiunea de înregistrare */
+.register-link {
+    text-align: center;
+    margin-top: 18px;
+}
+.register-link a {
+    color: #b97a7a;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+.register-link a:hover {
+    color: #7d4c4c;
+}
+.register-section {
+    background: #fff;
+    padding: 40px 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    min-width: 320px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+.register-section h2 {
+    margin-top: 0;
+    color: #b97a7a;
+    text-align: center;
+}
+.register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.register-form label {
+    font-weight: 500;
+}
+.register-form input {
+    padding: 10px;
+    border: 1px solid #e0b7b7;
+    border-radius: 6px;
+    font-size: 1em;
+}
+.register-form button {
+    background: #b97a7a;
+    color: #fff;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.register-form button:hover {
+    background: #e0b7b7;
+}
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f8f6f2;
+    color: #333;
+}
+header {
+    background: #e0b7b7;
+    padding: 20px 0;
+    text-align: center;
+}
+header h1 {
+    margin: 0;
+    font-size: 2.2em;
+    color: #7d4c4c;
+}
+nav {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+.nav-center {
+    display: flex;
+    justify-content: center;
+    flex: 1;
+    gap: 0;
+}
+.nav-right {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    gap: 10px;
+}
+nav a {
+    color: #7d4c4c;
+    text-decoration: none;
+    margin: 0 15px;
+    font-weight: bold;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+}
+nav a:hover {
+    color: #b97a7a;
+}
+main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+}
+.login-section {
+    background: #fff;
+    padding: 40px 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    min-width: 320px;
+}
+.login-section h2 {
+    margin-top: 0;
+    color: #b97a7a;
+    text-align: center;
+}
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.login-form label {
+    font-weight: 500;
+}
+.login-form input {
+    padding: 10px;
+    border: 1px solid #e0b7b7;
+    border-radius: 6px;
+    font-size: 1em;
+}
+.login-form button {
+    background: #e0b7b7;
+    color: #fff;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.login-form button:hover {
+    background: #b97a7a;
+}
+footer {
+    background: #e0b7b7;
+    color: #7d4c4c;
+    text-align: center;
+    padding: 15px 0;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+}
