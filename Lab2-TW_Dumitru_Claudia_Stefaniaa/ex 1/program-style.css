@@ -1,0 +1,27 @@
+/* Pastel/Warm theme specifically for programExcursie.html */
+:root{
+  --bg: #fff8f4;
+  --card: #ffffff;
+  --muted: #6b5e5e;
+  --accent: #ff9aa2;
+  --accent-2: #ffd6a5;
+  --accent-3: #cfe8d8;
+  --radius: 14px;
+}
+*{box-sizing:border-box}
+body{font-family:Poppins, 'Segoe UI', Tahoma, system-ui, -apple-system, Roboto, Arial; margin:0;background:var(--bg);color:var(--muted);}
+.container{max-width:900px;margin:0 auto;padding:28px}
+h1{font-size:1.8rem;text-align:center;color:var(--accent);margin-bottom:6px}
+.hero{display:block;margin:0 auto 18px auto;max-width:100%;height:auto;border-radius:16px;box-shadow:0 12px 30px rgba(199,160,160,0.08);border:1px solid rgba(0,0,0,0.04)}
+
+table{width:100%;border-collapse:collapse;margin-top:18px;font-size:15px;background:transparent}
+th,td{padding:12px;border:1px solid rgba(0,0,0,0.04)}
+th{background:linear-gradient(90deg,var(--accent-2),#fff7ee);color:#5a3b3b;text-align:left;font-weight:700}
+tbody tr:nth-child(odd){background:#fffefc}
+tbody tr:nth-child(even){background:#fff6f4}
+tbody tr:hover{background:#fff2e9}
+caption{caption-side:top;font-weight:700;color:var(--accent);padding-bottom:10px}
+
+global .desc{margin-top:18px;background:linear-gradient(180deg,#fff,#fffefc);padding:16px;border-radius:12px;color:var(--muted);border:1px solid rgba(0,0,0,0.03)}
+
+@media (max-width:600px){th,td{padding:10px;font-size:14px}}

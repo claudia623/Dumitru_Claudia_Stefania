@@ -1,0 +1,82 @@
+:root{
+  --bg: #fff8f4;
+  --card: #ffffff;
+  --muted: #6b5e5e;
+  --accent: #ff9aa2; /* warm pink */
+  --accent-2: #ffd6a5; /* peach */
+  --accent-3: #cfe8d8; /* soft mint */
+  --glass: rgba(255,255,255,0.6);
+  --soft: rgba(0,0,0,0.03);
+  --radius: 14px;
+}
+
+*{box-sizing:border-box}
+body{font-family: 'Poppins', 'Segoe UI', Tahoma, system-ui, -apple-system, Roboto, Arial; margin:0; background:linear-gradient(180deg,#fff8f4,#fff2ea); color:var(--muted); -webkit-font-smoothing:antialiased}
+.container{max-width:1100px;margin:0 auto;padding:28px}
+
+/* Header / Nav */
+header{background:transparent;padding:28px 0}
+header .brand{display:flex;align-items:center;gap:14px;justify-content:center}
+header .brand h1{margin:0;font-size:1.6rem;color:var(--accent);letter-spacing:0.4px}
+nav{display:flex;justify-content:center;align-items:center;margin-top:12px;gap:18px}
+nav a{color:var(--muted);text-decoration:none;padding:8px 14px;border-radius:12px;font-weight:600;transition:all .18s}
+nav a:hover{color:#fff;background:linear-gradient(90deg,var(--accent),var(--accent-2));box-shadow:0 6px 18px rgba(255,154,162,0.12);transform:translateY(-2px)}
+
+/* Layout helpers */
+.row{display:flex;gap:20px;align-items:flex-start}
+.card{background:var(--card);border-radius:var(--radius);padding:22px;border:1px solid rgba(0,0,0,0.04);box-shadow:0 8px 24px rgba(199,160,160,0.06)}
+
+/* Cart / small cards */
+.cart-wrapper{min-height:60vh;display:flex;justify-content:center;align-items:center}
+.cart-card{max-width:420px;width:100%;text-align:center;padding:28px;border-radius:18px;background:linear-gradient(180deg,#fff,#fffefc);border:1px solid rgba(0,0,0,0.04)}
+.cart-card h2{margin:6px 0 14px;color:var(--muted)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:none;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#423233;font-weight:700;cursor:pointer}
+.btn.ghost{background:transparent;border:1px solid rgba(66,50,50,0.06);color:var(--muted)}
+
+/* Toasts */
+#site-toast{position:fixed;right:18px;bottom:28px;z-index:9999;pointer-events:none}
+.toast{background:linear-gradient(90deg,var(--accent-2),var(--accent));color:#3a2a2a;padding:12px 16px;border-radius:12px;box-shadow:0 8px 20px rgba(199,160,160,0.12);pointer-events:auto;font-weight:700}
+.toast--enter{opacity:0;transform:translateY(8px) scale(.99);transition:all .22s}
+.toast--visible{opacity:1;transform:none;transition:all .22s}
+.toast--leave{opacity:0;transform:translateY(8px) scale(.99);transition:all .22s}
+.site-toast-center{position:fixed;left:50%;top:38%;transform:translateX(-50%);z-index:10000;pointer-events:none}
+.toast--center{min-width:220px;padding:14px 18px}
+
+/* Confirm */
+.site-confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.12);display:flex;align-items:center;justify-content:center;z-index:10010}
+.site-confirm-box{background:var(--card);padding:20px;border-radius:14px;min-width:300px;max-width:92%;box-shadow:0 12px 40px rgba(142,104,104,0.06);border:1px solid rgba(0,0,0,0.04)}
+.site-confirm-msg{color:var(--muted);font-weight:700;margin-bottom:16px;text-align:center}
+.site-confirm-actions{display:flex;gap:12px;justify-content:center}
+.site-confirm-yes{background:var(--accent);color:#fff;border:none;padding:10px 16px;border-radius:12px;cursor:pointer;font-weight:700}
+.site-confirm-no{background:transparent;color:var(--muted);border:1px solid rgba(0,0,0,0.06);padding:10px 16px;border-radius:12px;cursor:pointer}
+
+/* Forms */
+.form-card{background:linear-gradient(180deg,#fff,#fffefc);padding:22px;border-radius:12px;border:1px solid rgba(0,0,0,0.04)}
+label{display:block;margin-bottom:6px;color:var(--muted);font-weight:600}
+input[type=text],input[type=password],input[type=email]{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);background:transparent;color:#342626}
+
+/* Table styles for excursie */
+table{width:100%;border-collapse:collapse;margin-top:18px;font-size:15px;background:transparent}
+th,td{padding:12px;border:1px solid rgba(0,0,0,0.04)}
+th{background:linear-gradient(90deg,var(--accent-2),#fff7ee);color:#5a3b3b;text-align:left;font-weight:700}
+tbody tr:nth-child(odd){background:#fffefc}
+tbody tr:nth-child(even){background:#fff6f4}
+tbody tr:hover{background:#fff2e9}
+caption{caption-side:top;font-weight:700;color:var(--accent);padding-bottom:10px}
+
+/* Hero image */
+.hero{display:block;margin:10px auto 18px auto;max-width:100%;height:auto;border-radius:16px;box-shadow:0 12px 30px rgba(199,160,160,0.08);border:1px solid rgba(0,0,0,0.04)}
+
+.desc{margin-top:18px;background:linear-gradient(180deg,#fff,#fffefc);padding:16px;border-radius:12px;color:var(--muted);border:1px solid rgba(0,0,0,0.03)}
+
+.cart-badge{display:inline-block;min-width:18px;height:18px;padding:0 6px;background:var(--accent);color:#fff;border-radius:999px;font-size:12px;line-height:18px;text-align:center;margin-left:-10px;position:relative;top:-10px}
+
+footer{padding:20px 0;text-align:center;color:var(--muted);border-top:1px solid rgba(0,0,0,0.03);margin-top:40px}
+
+@media (max-width:800px){
+  .row{flex-direction:column}
+  nav{gap:10px;padding:0 12px;flex-wrap:wrap}
+  header .brand h1{font-size:1.2rem}
+}
