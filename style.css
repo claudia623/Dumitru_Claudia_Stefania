@@ -1,230 +1,244 @@
-/* Stil pentru pagina de coș */
-.cart-wrapper {
-    min-height: 70vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: none;
+:root{
+  --bg: #fff8f5;
+  --card: #fff;
+  --muted: #777;
+  --accent: #d4637a; /* pink-ish */
+  --accent-2: #f6c9d6;
+  --shadow: rgba(22,22,22,0.08);
+  --max-width: 1100px;
 }
-.cart-card {
-    background: #fff;
-    border-radius: 18px;
-    box-shadow: 0 4px 24px rgba(224,183,183,0.18);
-    padding: 40px 32px 32px 32px;
-    min-width: 320px;
-    max-width: 350px;
-    margin: 0 auto;
-    text-align: center;
-    border: 2px solid #e0b7b7;
+
+/* Reset + base */
+*{box-sizing:border-box}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background:var(--bg);
+  color:#222;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height:1.45;
+  padding-bottom:100px; /* reserve space for footer on short pages */
 }
-.cart-card h2 {
-    margin-top: 0;
-    margin-bottom: 12px;
-    font-size: 1.5em;
+
+.container{
+  width:100%;
+  max-width:var(--max-width);
+  margin:0 auto;
+  padding:24px;
 }
-.cart-card p {
-    margin: 0;
-    font-size: 1.1em;
+
+/* Site layout using CSS Grid: header, nav, main, aside, footer */
+.site-layout{
+  display:grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-areas:
+    "header"
+    "nav"
+    "main"
+    "footer";
+  min-height:100vh;
 }
-/* Icon coș de cumpărături în meniu */
-.cart-icon {
-    float: right;
-    margin-left: 18px;
-    display: flex;
-    align-items: center;
-    height: 100%;
-    color: #7d4c4c;
-    text-decoration: none;
-    transition: color 0.2s;
+.site-layout header{grid-area: header}
+.site-layout nav{grid-area: nav}
+.site-layout main{grid-area: main}
+.site-layout aside{grid-area: aside}
+.site-layout footer{grid-area: footer}
+
+/* Desktop grid: main + aside side-by-side */
+@media (min-width: 900px){
+  .site-layout{
+    grid-template-columns: 240px 1fr 300px; /* optional: left nav / main / aside */
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "header header header"
+      "nav main aside"
+      "footer footer footer";
+  }
+  .site-layout nav{align-self:start}
 }
-.cart-icon:hover {
-    color: #b97a7a;
+
+/* Header / nav */
+header{
+  background:var(--card);
+  padding:20px 0;
+  text-align:center;
+  border-bottom:1px solid rgba(0,0,0,0.04);
 }
-nav .login-link {
-    float: right;
-    margin-left: 10px;
+header h1{margin:0;font-size:1.6rem;color:var(--accent)}
+nav{margin-top:10px;display:flex;justify-content:center;align-items:center;position:relative}
+.nav-center{display:flex;justify-content:center;flex:1;gap:0}
+.nav-right{display:flex;align-items:center;position:absolute;right:12px;top:12px;gap:10px}
+nav a{color:var(--accent);text-decoration:none;margin:0 12px;font-weight:700}
+nav a:hover{color:var(--accent-2)}
+
+/* Badge/cart */
+.cart-icon{display:inline-flex;align-items:center;gap:8px;color:var(--accent)}
+.cart-badge{background:var(--accent);color:#fff;border-radius:12px;padding:2px 8px;font-weight:700;display:none}
+
+/* Safety centering rules for pages that don't use .container */
+/* Keep the outer <footer> full-width; center the inner container instead */
+header h1, main > section, footer .container, .site-footer .container {max-width:var(--max-width);margin-left:auto;margin-right:auto;padding:0 18px}
+main > section, footer .container {box-sizing:border-box}
+
+/* Cards / grids */
+.products-wrap{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+.product-card{background:var(--card);border-radius:12px;padding:14px;border:1px solid rgba(0,0,0,0.04);box-shadow:0 6px 18px rgba(10,10,10,0.03);display:flex;flex-direction:column;gap:10px;min-width:200px;max-width:260px;flex:0 0 260px}
+.product-card img{width:100%;height:auto;object-fit:cover;border-radius:10px}
+
+/* Make product links match site theme instead of default blue */
+.product-link, .product-card a{color:inherit;text-decoration:none}
+.product-link:visited{color:inherit}
+.product-card h3{margin:8px 0 4px}
+.product-card h3 a{font-weight:800;color:var(--accent);text-decoration:none}
+.product-card h3 a:hover{color:var(--accent-2);text-decoration:underline}
+.product-link:focus{outline:3px solid rgba(212,99,122,0.14);outline-offset:3px;border-radius:6px}
+.product-card{transition:transform .12s ease, box-shadow .12s ease}
+.product-card:hover{transform:translateY(-4px);box-shadow:0 14px 34px rgba(10,10,10,0.06)}
+
+/* Cart styles */
+.cart-wrapper{min-height:70vh;display:flex;justify-content:center;align-items:center;background:transparent}
+.cart-card{background:var(--card);border-radius:18px;box-shadow:0 4px 24px rgba(224,183,183,0.18);padding:32px;min-width:320px;max-width:500px;margin:0 auto}
+.cart-card p{margin:0;font-size:1.05rem}
+
+/* Forms / login / register */
+.login-section,.register-section{background:var(--card);padding:32px;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);min-width:280px}
+.login-section h2,.register-section h2{margin-top:0;color:var(--accent)}
+form{display:flex;flex-direction:column;gap:12px}
+input,textarea,select{padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.08);}
+.guest-btn{background:var(--accent);color:#fff;border:none;padding:12px;border-radius:6px;font-size:1em;font-weight:700;cursor:pointer}
+.guest-btn:hover{opacity:0.95}
+
+/* Style primary form submit buttons consistently */
+form button[type="submit"], .login-form button[type="submit"], .register-form button[type="submit"]{
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  padding:12px 14px;
+  border-radius:8px;
+  font-weight:800;
+  cursor:pointer;
 }
-@media (max-width: 600px) {
-    .cart-icon {
-        margin-left: 8px;
-    }
+form button[type="submit"]:hover{opacity:0.95}
+
+/* Ensure login/register sections are centered & constrained when inside .container */
+.login-section, .register-section{max-width:520px;margin:18px auto}
+
+/* Prevent textarea from being resizable by dragging (applies to message box on contact page) */
+textarea{resize:none}
+
+/* Register button: different color and centered */
+.register-form button[type="submit"]{
+  background: var(--accent-2);
+  color: #222;
+  display: block;
+  margin: 16px auto 0;
+  padding: 12px 18px;
+  min-width: 160px;
+  border-radius: 8px;
+  font-weight:800;
+  box-shadow: 0 6px 18px rgba(198,96,116,0.08);
 }
-/* Stil pentru butonul Guest */
-.guest-btn {
-    background: #7d4c4c;
-    color: #fff;
-    border: none;
-    padding: 12px;
-    border-radius: 6px;
-    font-size: 1em;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 10px;
-    transition: background 0.2s;
+.register-form button[type="submit"]:hover{opacity:0.95}
+
+/* Footer */
+footer{padding:18px 0;text-align:center;color:var(--muted);font-size:0.95rem;background:transparent}
+.site-footer{background:linear-gradient(180deg,#fff,#fff);border-top:1px solid rgba(0,0,0,0.04);padding:28px 0;margin-top:28px}
+.site-footer .footer-grid{display:flex;gap:22px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.site-footer .footer-grid>div{flex:1;min-width:180px}
+.site-footer h4{margin:0 0 8px 0;font-size:1rem}
+.site-footer p,.site-footer a{color:var(--muted);text-decoration:none}
+.site-footer a{color:inherit}
+.site-footer .footer-bottom{margin-top:18px;border-top:1px solid rgba(0,0,0,0.04);padding-top:12px;color:var(--muted);font-size:0.9rem}
+
+/* Toast & confirm (placeholders for site-ui.js wiring) */
+.site-toast{position:fixed;z-index:120;left:50%;transform:translateX(-50%);bottom:24px;display:flex;pointer-events:none}
+.site-toast .toast{background:rgba(0,0,0,0.85);color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.25);opacity:0;transform:translateY(8px);transition:all .28s}
+.site-toast.show .toast{opacity:1;transform:none}
+.confirm-backdrop{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);z-index:110;opacity:0;pointer-events:none;transition:opacity .18s}
+.confirm-backdrop.show{opacity:1;pointer-events:auto}
+.confirm-box{background:var(--card);padding:18px;border-radius:12px;min-width:320px}
+
+/* Utilities */
+.muted{color:var(--muted)}
+.text-center{text-align:center}
+
+@media (max-width:600px){
+  .site-footer .footer-grid{flex-direction:column}
+  .nav-right{position:static;justify-content:center;margin-top:12px}
+  .product-card img{height:140px}
 }
-.guest-btn:hover {
-    background: #b97a7a;
+
+/* Add-to-cart button styling */
+.add-btn{
+  display:inline-block;
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  padding:10px 12px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:700;
+  transition:transform .08s ease, opacity .12s ease;
 }
-/* Stiluri pentru secțiunea de înregistrare */
-.register-link {
-    text-align: center;
-    margin-top: 18px;
+.add-btn:hover{opacity:0.95;transform:translateY(-1px)}
+.product-card .add-btn{margin-top:8px}
+
+/* Temporary added state for add button */
+.add-btn.added{
+  background: linear-gradient(180deg, #8fd3c7, var(--accent));
+  transform:translateY(-1px) scale(0.99);
 }
-.register-link a {
-    color: #b97a7a;
-    text-decoration: underline;
-    cursor: pointer;
-    font-weight: 500;
-    transition: color 0.2s;
+
+/* Fade-out animation used when removing cart rows */
+.fade-out{
+  opacity: 0 !important;
+  transform: translateX(-12px) !important;
+  transition: opacity .32s ease, transform .32s ease;
 }
-.register-link a:hover {
-    color: #7d4c4c;
+
+/* Ensure remove / clear buttons inside cart look like site buttons */
+.cart-list .btn{padding:8px 10px;border-radius:8px}
+.cart-list .btn.ghost{background:transparent;border:1px solid rgba(0,0,0,0.06)}
+
+/* On small screens product cards stack vertically and images centered */
+@media (max-width: 900px){
+  .products-wrap{flex-direction:column;align-items:center}
+  .product-card{width:100%;max-width:400px;flex:0 0 auto}
+  .product-card img{margin:0 auto;display:block}
 }
-.register-section {
-    background: #fff;
-    padding: 40px 30px;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    min-width: 320px;
-    max-width: 400px;
-    margin: 0 auto;
+
+/* Back to top button */
+#back-to-top{
+  position:fixed;right:20px;bottom:20px;z-index:200;background:var(--accent);color:white;border:none;padding:10px 12px;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,0.18);cursor:pointer;font-weight:700;display:block;opacity:0.98}
+#back-to-top.show{display:block}
+
+/* Product detail page */
+.product-detail .detail-grid{display:grid;grid-template-columns:1fr 360px;gap:22px;align-items:start}
+.product-detail .main-img img{width:100%;height:auto;border-radius:12px}
+.product-detail .thumbs{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.product-detail .thumb{border:0;background:transparent;padding:4px;cursor:pointer}
+.product-detail .thumb img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,0,0,0.06)}
+.product-detail .detail-info h2{margin-top:0}
+.product-detail .price{font-weight:800;color:var(--accent);margin-top:8px}
+.product-detail .desc{margin-top:12px;color:var(--muted)}
+.reviews{margin-top:22px}
+.review{border-top:1px solid rgba(0,0,0,0.04);padding:10px 0}
+.rev-head{display:flex;gap:10px;align-items:center}
+.stars{color:#f5b0b7}
+
+@media (max-width:900px){
+  .product-detail .detail-grid{grid-template-columns:1fr}
+  .product-detail .thumb img{width:56px;height:56px}
 }
-.register-section h2 {
-    margin-top: 0;
-    color: #b97a7a;
-    text-align: center;
+
+/* Responsive typography */
+html{font-size:16px}
+@media (max-width:900px){
+  html{font-size:15px}
 }
-.register-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-.register-form label {
-    font-weight: 500;
-}
-.register-form input {
-    padding: 10px;
-    border: 1px solid #e0b7b7;
-    border-radius: 6px;
-    font-size: 1em;
-}
-.register-form button {
-    background: #b97a7a;
-    color: #fff;
-    border: none;
-    padding: 12px;
-    border-radius: 6px;
-    font-size: 1em;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.register-form button:hover {
-    background: #e0b7b7;
-}
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    padding: 0;
-    background: #f8f6f2;
-    color: #333;
-}
-header {
-    background: #e0b7b7;
-    padding: 20px 0;
-    text-align: center;
-}
-header h1 {
-    margin: 0;
-    font-size: 2.2em;
-    color: #7d4c4c;
-}
-nav {
-    margin-top: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-}
-.nav-center {
-    display: flex;
-    justify-content: center;
-    flex: 1;
-    gap: 0;
-}
-.nav-right {
-    display: flex;
-    align-items: center;
-    position: absolute;
-    right: 0;
-    top: 0;
-    height: 100%;
-    gap: 10px;
-}
-nav a {
-    color: #7d4c4c;
-    text-decoration: none;
-    margin: 0 15px;
-    font-weight: bold;
-    transition: color 0.2s;
-    display: flex;
-    align-items: center;
-}
-nav a:hover {
-    color: #b97a7a;
-}
-main {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 70vh;
-}
-.login-section {
-    background: #fff;
-    padding: 40px 30px;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    min-width: 320px;
-}
-.login-section h2 {
-    margin-top: 0;
-    color: #b97a7a;
-    text-align: center;
-}
-.login-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-.login-form label {
-    font-weight: 500;
-}
-.login-form input {
-    padding: 10px;
-    border: 1px solid #e0b7b7;
-    border-radius: 6px;
-    font-size: 1em;
-}
-.login-form button {
-    background: #e0b7b7;
-    color: #fff;
-    border: none;
-    padding: 12px;
-    border-radius: 6px;
-    font-size: 1em;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.login-form button:hover {
-    background: #b97a7a;
-}
-footer {
-    background: #e0b7b7;
-    color: #7d4c4c;
-    text-align: center;
-    padding: 15px 0;
-    position: fixed;
-    width: 100%;
-    bottom: 0;
+@media (max-width:400px){
+  html{font-size:14px}
 }
