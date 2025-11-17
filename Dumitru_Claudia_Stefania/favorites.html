@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Favorite</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="site-layout">
+  <header>
+    <h1>Favorite</h1>
+    <nav>
+      <div class="nav-center">
+        <a href="index.html">Acasă</a>
+        <a href="produse.html">Produse</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="nav-right">
+        <a href="favorites.html" class="favorites-icon" title="Favorite">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.93-9.5-7.02C.8 11.6 3 7.5 6.5 7.5c1.9 0 3.2 1.2 4.5 2.6 1.3-1.4 2.6-2.6 4.5-2.6C21 7.5 23.2 11.6 21.5 13.98 19.5 16.07 12 21 12 21z"/></svg>
+          <span class="fav-badge" id="fav-badge" style="display:none">0</span>
+        </a>
+        <a href="cart.html" class="cart-icon" title="Coș de cumpărături">Coș</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section style="margin-top:20px">
+      <h2>Produse favorite</h2>
+      <div id="fav-list" class="products-wrap" style="margin-top:20px"></div>
+      <p id="fav-empty" style="display:none">Nu aveți produse adăugate la favorite.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container"><div class="footer-bottom text-center muted">&copy; 2025 Magazin Plușuri Croșetate</div></div>
+  </footer>
+
+  <script src="products-data.js"></script>
+  <script src="cart.js"></script>
+  <script src="site-ui.js"></script>
+  <script src="favorites.js"></script>
+  <script>
+    (function(){
+      var wrap = document.getElementById('fav-list');
+      var empty = document.getElementById('fav-empty');
+      function render(){
+        var list = (window.favAPI && window.favAPI.getFavorites()) || JSON.parse(localStorage.getItem('favorites')||'[]');
+        wrap.innerHTML = '';
+        if(!list || !list.length){ empty.style.display = 'block'; return; }
+        empty.style.display = 'none';
+        list.forEach(function(p){
+          var card = document.createElement('div'); card.className='product-card'; card.setAttribute('data-id', p.id); card.setAttribute('data-title', p.title); card.setAttribute('data-price', p.price || 0); card.style.maxWidth='260px';
+          var a = document.createElement('a'); a.href='product.html?id='+encodeURIComponent(p.id); var img = document.createElement('img'); img.src = p.image||''; img.alt=p.title; img.style.width='100%'; img.style.borderRadius='10px'; a.appendChild(img);
+          var h3 = document.createElement('h3'); var link = document.createElement('a'); link.href='product.html?id='+encodeURIComponent(p.id); link.textContent=p.title; h3.appendChild(link);
+          var price = document.createElement('p'); price.className = 'price'; price.textContent = p.price ? ('Preț: ' + p.price + ' lei') : '';
+          var addBtn = document.createElement('button'); addBtn.className='add-btn'; addBtn.textContent='Adaugă în coș';
+          var remBtn = document.createElement('button'); remBtn.className='fav-btn'; remBtn.textContent='♥'; remBtn.title='Elimină din favorite';
+          card.appendChild(a); card.appendChild(h3); card.appendChild(price); card.appendChild(addBtn); card.appendChild(remBtn);
+          wrap.appendChild(card);
+        });
+      }
+      document.addEventListener('DOMContentLoaded', render);
+      document.addEventListener('favoritesUpdated', render);
+    })();
+  </script>
+</body>
+</html>

@@ -8,7 +8,6 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
     }
     function notifyToast(message){
-        // support optional second arg 'position' when used as notifyToast(msg, position)
         var position = arguments.length > 1 ? arguments[1] : undefined;
         var detail = { message: message };
         if(position) detail.position = position;
@@ -20,7 +19,6 @@
         if(existing){ existing.qty = (existing.qty||0) + (item.qty||1); }
         else{ cart.push({ id: item.id, title: item.title, price: item.price, image: item.image, qty: item.qty || 1 }); }
         saveCart(cart);
-        // show a more prominent centered toast when adding an item
         notifyToast(item.title + ' a fost adăugat în coș', 'center');
         window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { cart } }));
     }

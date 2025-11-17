@@ -21,6 +21,9 @@
             if (loginForm) {
                 loginForm.addEventListener('submit', function(e) {
                     e.preventDefault();
+                    var username = document.getElementById('username').value || 'guest';
+                    // mark as logged in (simple simulation)
+                    try{ localStorage.setItem('user', username); localStorage.setItem('loggedIn', '1'); }catch(e){}
                     window.location.href = 'index.html';
                 });
             }
@@ -28,19 +31,21 @@
             if (registerForm) {
                 registerForm.addEventListener('submit', function(e) {
                     e.preventDefault();
+                    var username = document.getElementById('reg-username').value || 'guest';
+                    try{ localStorage.setItem('user', username); localStorage.setItem('loggedIn', '1'); }catch(e){}
                     window.location.href = 'index.html';
                 });
             }
         });
     </script>
 </head>
-<body>
+<body class="site-layout">
     <header>
         <h1>Magazin de Plușuri Croșetate</h1>
         <nav>
         </nav>
     </header>
-    <main>
+    <main class="container">
         <section class="login-section">
             <h2>Autentificare</h2>
             <form class="login-form">
@@ -71,8 +76,27 @@
             </div>
         </section>
     </main>
-    <footer>
-        <p>&copy; 2025 Magazin Plușuri Croșetate. Toate drepturile rezervate.</p>
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-about">
+                    <h4>Despre noi</h4>
+                    <p>Plușuri croșetate manual, create cu grijă și atenție la detalii. Cadouri perfecte pentru toate vârstele.</p>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contact</h4>
+                    <p>Email: <a href="mailto:plusuricrosetate@email.com">plusuricrosetate@email.com</a></p>
+                    <p>Telefon: 0722 123 456</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Link-uri</h4>
+                    <p><a href="produse.html">Produse</a></p>
+                    <p><a href="contact.html">Formular contact</a></p>
+                    <p><a href="cart.html">Coș</a></p>
+                </div>
+            </div>
+            <div class="footer-bottom text-center muted">&copy; 2025 Magazin Plușuri Croșetate. Toate drepturile rezervate.</div>
+        </div>
     </footer>
 </body>
 </html>

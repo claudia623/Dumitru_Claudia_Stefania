@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Produs - Detalii</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="site-layout">
+  <header>
+    <h1>Magazin de Plușuri Croșetate</h1>
+    <nav>
+      <div class="nav-center">
+        <a href="index.html">Acasă</a>
+        <a href="produse.html">Produse</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="nav-right">
+        <a href="favorites.html" class="favorites-icon" title="Favorite">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.93-9.5-7.02C.8 11.6 3 7.5 6.5 7.5c1.9 0 3.2 1.2 4.5 2.6 1.3-1.4 2.6-2.6 4.5-2.6C21 7.5 23.2 11.6 21.5 13.98 19.5 16.07 12 21 12 21z"/></svg>
+          <span class="fav-badge" id="fav-badge" style="display:none">0</span>
+        </a>
+        <a href="cart.html" class="cart-icon" title="Coș de cumpărături">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M7 20a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7.16 16h9.68c.8 0 1.5-.48 1.8-1.22l3.24-7.24A1 1 0 0 0 21 6H6.21l-.94-2.36A1 1 0 0 0 4.34 2H1v2h2.34l3.6 9.03-1.35 2.44C4.52 16.37 5.48 18 7 18h12v-2H7.42a.25.25 0 0 1-.22-.13l.96-1.87z"/></svg>
+          <span class="cart-badge" id="cart-badge">0</span>
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <a href="produse.html" style="display:inline-block;margin:18px 0;color:var(--accent);">← Înapoi la produse</a>
+    <div id="product-root" class="product-detail">
+      <!-- Rendered by JS -->
+      <p>Se încarcă produs...</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-about"><h4>Despre noi</h4><p>Plușuri croșetate manual.</p></div>
+        <div class="footer-contact"><h4>Contact</h4><p>Email: <a href="mailto:plusuricrosetate@email.com">plusuricrosetate@email.com</a></p></div>
+        <div class="footer-links"><h4>Link-uri</h4><p><a href="produse.html">Produse</a></p></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="products-data.js"></script>
+  <script src="cart.js"></script>
+  <script src="site-ui.js"></script>
+  <script src="favorites.js"></script>
+  <script>
+    function q(name){
+      var params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+    function renderStars(n){
+      var s=''; for(var i=0;i<5;i++){ s += i < n ? '★' : '☆'; } return '<span class="stars">'+s+'</span>';
+    }
+    (function(){
+      var id = q('id');
+      var root = document.getElementById('product-root');
+      if(!id || !window.PRODUCTS){ root.innerHTML = '<p>Produsul nu a fost găsit.</p>'; return; }
+      var p = window.PRODUCTS.find(function(x){ return x.id === id; });
+      if(!p){ root.innerHTML = '<p>Produsul nu a fost găsit.</p>'; return; }
+
+      var html = '';
+      html += '<div class="detail-grid">';
+      html += '<div class="gallery">';
+      html += '<div class="main-img"><img src="'+p.images[0]+'" id="main-img" alt="'+p.title+'"></div>';
+      html += '<div class="thumbs">';
+      p.images.forEach(function(src,idx){ html += '<button class="thumb" data-src="'+src+'" aria-label="Vezi imagine '+(idx+1)+'"><img src="'+src+'" alt="thumb-'+idx+'"></button>'; });
+      html += '</div></div>';
+
+      html += '<div class="detail-info">';
+      html += '<h2>'+p.title+'</h2>';
+      html += '<div class="price">'+p.price+' lei</div>';
+      html += '<p class="desc">'+p.description+'</p>';
+      html += '<div style="margin-top:12px"><button class="add-btn" id="add-product">Adaugă în coș</button> <button class="fav-btn" id="fav-product" style="margin-left:8px">♡ Adaugă la favorite</button></div>';
+      html += '</div>';
+      html += '</div>';
+
+      html += '<section class="reviews"><h3>Recenzii</h3>';
+      if(p.reviews && p.reviews.length){
+        p.reviews.forEach(function(r){ html += '<div class="review"><div class="rev-head"><strong>'+r.author+'</strong> '+renderStars(r.rating)+'</div><div class="rev-body">'+r.text+'</div></div>'; });
+      } else { html += '<p>Momentan nu există recenzii.</p>'; }
+      html += '</section>';
+
+      root.innerHTML = html;
+
+      // thumbnail click
+      root.querySelectorAll('.thumb').forEach(function(b){ b.addEventListener('click', function(){ var s=b.dataset.src; var main=document.getElementById('main-img'); if(main) main.src=s; }); });
+
+      // add to cart
+      document.getElementById('add-product').addEventListener('click', function(){
+        var item = { id: p.id, title: p.title, price: p.price, image: p.images[0], qty: 1 };
+        if(window.cartAPI && window.cartAPI.addToCart) window.cartAPI.addToCart(item);
+        else {
+          var c = JSON.parse(localStorage.getItem('cart')||'[]'); var ex = c.find(function(x){return x.id===item.id}); if(ex) ex.qty=(ex.qty||0)+1; else c.push(item); localStorage.setItem('cart', JSON.stringify(c)); window.dispatchEvent(new CustomEvent('cartUpdated',{detail:{cart:c}})); window.dispatchEvent(new CustomEvent('siteToast',{detail:{message: item.title + ' a fost adăugat în coș', position:'center'}}));
+        }
+      });
+
+      // update favorite button initial state if favAPI present
+      (function(){
+        var favBtn = document.getElementById('fav-product');
+        if(!favBtn) return;
+        function refresh(){
+          try{
+            if(window.favAPI && window.favAPI.isFavorite && window.favAPI.isFavorite(p.id)){
+              favBtn.textContent = '♥ Favorit';
+            } else { favBtn.textContent = '♡ Adaugă la favorite'; }
+          }catch(e){}
+        }
+        refresh();
+        window.addEventListener('favoritesUpdated', refresh);
+      })();
+    })();
+  </script>
+</body>
+</html>
