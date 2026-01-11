@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magazin Plușuri Croșetate - Produse</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="site-layout">
+    <header>
+        <h1>Magazin de Plușuri Croșetate</h1>
+        <nav>
+            <div class="nav-center">
+                <a href="index.html">Acasă</a>
+                <a href="produse.html">Produse</a>
+                <a href="contact.html">Contact</a>
+            </div>
+            <div class="nav-right">
+                <a href="cart.html" class="cart-icon" title="Coș de cumpărături">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M7 20a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7.16 16h9.68c.8 0 1.5-.48 1.8-1.22l3.24-7.24A1 1 0 0 0 21 6H6.21l-.94-2.36A1 1 0 0 0 4.34 2H1v2h2.34l3.6 9.03-1.35 2.44C4.52 16.37 5.48 18 7 18h12v-2H7.42a.25.25 0 0 1-.22-.13l.96-1.87z"/></svg>
+                    <span class="cart-badge" id="cart-badge" style="display:none">0</span>
+                </a>
+                <a href="login.html" class="login-link">Login</a>
+            </div>
+        </nav>
+    </header>
+    <main>
+        <section style="text-align:center; margin-top:40px;">
+            <h2>Produsele Noastre</h2>
+                        <div class="products-wrap" id="products-wrap" style="margin-top:30px;">
+                            <!-- product cards will be rendered here -->
+                        </div>
+                        <script src="products-data.js"></script>
+                        <script src="favorites.js"></script>
+                        <script>
+                            (function(){
+                                var wrap = document.getElementById('products-wrap');
+                                if(!window.PRODUCTS || !wrap) return;
+                                window.PRODUCTS.forEach(function(p){
+                                    var card = document.createElement('div');
+                                    card.className = 'product-card';
+                                    card.setAttribute('data-id', p.id);
+                                    card.setAttribute('data-title', p.title);
+                                    card.setAttribute('data-price', p.price);
+                                    // width controlled by CSS; avoid forcing inline maxWidth
+
+                                    var imgLink = document.createElement('a'); imgLink.className='product-link'; imgLink.href = 'product.html?id='+encodeURIComponent(p.id);
+                                    var img = document.createElement('img'); img.src = p.images && p.images[0] ? p.images[0] : ''; img.alt = p.title;
+                                    imgLink.appendChild(img);
+
+                                    var h3 = document.createElement('h3'); var a = document.createElement('a'); a.className='product-link'; a.href='product.html?id='+encodeURIComponent(p.id); a.textContent = p.title; h3.appendChild(a);
+
+                                    var price = document.createElement('p'); price.className = 'price'; price.textContent = 'Preț: ' + p.price + ' lei';
+                                    var btn = document.createElement('button'); btn.className='add-btn'; btn.textContent='Adaugă în coș';
+                                    var fav = document.createElement('button'); fav.className='fav-btn'; fav.setAttribute('aria-label','Adaugă la favorite'); fav.textContent = window.favoritesAPI && window.favoritesAPI.isFavorite && window.favoritesAPI.isFavorite(p.id) ? '♥' : '♡';
+
+                                    // footer wrapper to keep buttons aligned to bottom of card
+                                    var footer = document.createElement('div'); footer.className = 'card-footer';
+                                    footer.appendChild(btn); footer.appendChild(fav);
+
+                                    // make whole card keyboard-focusable and clickable (except the add/fav buttons / internal links)
+                                    card.setAttribute('tabindex','0');
+                                    card.style.cursor = 'pointer';
+
+                                    card.appendChild(imgLink); card.appendChild(h3); card.appendChild(price); card.appendChild(footer);
+                                    wrap.appendChild(card);
+
+                                    // favorite click
+                                    // set initial active state class if favorite
+                                    try{ if(window.favoritesAPI && window.favoritesAPI.isFavorite && window.favoritesAPI.isFavorite(p.id)) fav.classList.add('fav-active'); }catch(e){}
+                                    fav.addEventListener('click', function(e){
+                                        e.stopPropagation();
+                                        if(window.favoritesAPI && window.favoritesAPI.toggle){ window.favoritesAPI.toggle(p.id); }
+                                        // update visual: text + active class
+                                        try{
+                                            if(window.favoritesAPI && window.favoritesAPI.isFavorite && window.favoritesAPI.isFavorite(p.id)){
+                                                fav.textContent = '♥'; fav.classList.add('fav-active');
+                                            } else { fav.textContent = '♡'; fav.classList.remove('fav-active'); }
+                                        }catch(e){}
+                                    });
+
+                                    // click -> go to product page unless click was on the add button or an internal link
+                                    card.addEventListener('click', function(e){
+                                        if(e.target.closest('.add-btn')) return; // allow add button
+                                        if(e.target.closest('.fav-btn')) return; // allow fav button
+                                        if(e.target.closest('a')) return; // allow link clicks (image, title)
+                                        window.location.href = 'product.html?id='+encodeURIComponent(p.id);
+                                    });
+
+                                    // keyboard accessibility: Enter or Space navigates
+                                    card.addEventListener('keydown', function(e){
+                                        if(e.key === 'Enter' || e.key === ' ') {
+                                            // ignore if focus is on a button or link
+                                            if(document.activeElement && (document.activeElement.closest && document.activeElement.closest('.add-btn') || document.activeElement.tagName === 'A')) return;
+                                            e.preventDefault();
+                                            window.location.href = 'product.html?id='+encodeURIComponent(p.id);
+                                        }
+                                    });
+                                });
+                            })();
+                        </script>
+            <script src="cart.js"></script>
+            <script src="auth.js"></script>
+            <script src="site-ui.js"></script>
+        </section>
+    </main>
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-about">
+                    <h4>Despre noi</h4>
+                    <p>Plușuri croșetate manual, create cu grijă și atenție la detalii. Cadouri perfecte pentru toate vârstele.</p>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contact</h4>
+                    <p>Email: <a href="mailto:plusuricrosetate@email.com">plusuricrosetate@email.com</a></p>
+                    <p>Telefon: 0722 123 456</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Link-uri</h4>
+                    <p><a href="produse.html">Produse</a></p>
+                    <p><a href="contact.html">Formular contact</a></p>
+                    <p><a href="cart.html">Coș</a></p>
+                </div>
+            </div>
+            <div class="footer-bottom text-center muted">&copy; 2025 Magazin Plușuri Croșetate. Toate drepturile rezervate.</div>
+        </div>
+    </footer>
+</body>
+</html>
