@@ -18,74 +18,56 @@
     function add(id){
         if(!id) return Promise.resolve();
         var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
+        var f = getFavorites();
         
-        if(u && window.productsAPI && window.productsAPI.addFavorite){
-            return window.productsAPI.addFavorite(id)
-                .then(function(){
-                    var f = getFavorites(); 
-                    if(f.indexOf(String(id)) === -1){ 
-                        f.push(String(id)); 
-                        localStorage.setItem(KEY, JSON.stringify(f)); 
-                        // Single toast notification
-                        window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Adăugat la favorite', position:'center'}})); 
-                        if(document.getElementById('favorites-root')){
-                            renderFavoritesPage();
-                        }
-                    }
-                })
-                .catch(function(err){
-                    console.error('Error adding favorite:', err);
-                    var f = getFavorites(); 
-                    if(f.indexOf(String(id)) === -1){ 
-                        f.push(String(id)); 
-                        localStorage.setItem(KEY, JSON.stringify(f)); 
-                    }
-                });
-        } else {
-            var f = getFavorites(); 
-            if(f.indexOf(String(id)) === -1){ 
-                f.push(String(id)); 
-                localStorage.setItem(KEY, JSON.stringify(f)); 
-                window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Adăugat la favorite', position:'center'}})); 
-                if(document.getElementById('favorites-root')){
-                    renderFavoritesPage();
-                }
-            }
+        // Already in favorites
+        if(f.indexOf(String(id)) !== -1) {
             return Promise.resolve();
         }
+        
+        // Add to localStorage first
+        f.push(String(id));
+        localStorage.setItem(KEY, JSON.stringify(f));
+        window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Adăugat la favorite', position:'center'}}));
+        if(document.getElementById('favorites-root')){
+            renderFavoritesPage();
+        }
+        
+        // If logged in, sync to backend
+        if(u && window.productsAPI && window.productsAPI.addFavorite){
+            return window.productsAPI.addFavorite(id)
+                .catch(function(err){
+                    console.error('Error syncing favorite to backend:', err);
+                    // Already in localStorage, so it's ok
+                });
+        }
+        
+        return Promise.resolve();
     }
     
     function remove(id){
         if(!id) return Promise.resolve();
         var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
+        var f = getFavorites();
         
+        // Remove from localStorage first
+        var out = f.filter(function(x){ return String(x) !== String(id); });
+        localStorage.setItem(KEY, JSON.stringify(out));
+        window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Eliminat din favorite', position:'center'}}));
+        if(document.getElementById('favorites-root')){
+            renderFavoritesPage();
+        }
+        
+        // If logged in, sync to backend
         if(u && window.productsAPI && window.productsAPI.removeFavorite){
             return window.productsAPI.removeFavorite(id)
-                .then(function(){
-                    var f = getFavorites(); 
-                    var out = f.filter(function(x){ return String(x) !== String(id); }); 
-                    localStorage.setItem(KEY, JSON.stringify(out));
-                    window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Eliminat din favorite', position:'center'}})); 
-                    if(document.getElementById('favorites-root')){
-                        renderFavoritesPage();
-                    }
-                })
                 .catch(function(err){
-                    console.error('Error removing favorite from backend:', err);
-                    var f = getFavorites(); 
-                    var out = f.filter(function(x){ return String(x) !== String(id); }); 
-                    localStorage.setItem(KEY, JSON.stringify(out));
+                    console.error('Error syncing favorite removal to backend:', err);
+                    // Already removed from localStorage, so it's ok
                 });
-        } else {
-            var f = getFavorites(); 
-            var out = f.filter(function(x){ return String(x) !== String(id); }); 
-            localStorage.setItem(KEY, JSON.stringify(out));
-            window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Eliminat din favorite', position:'center'}})); 
-            if(document.getElementById('favorites-root')){
-                renderFavoritesPage();
-            }
-            return Promise.resolve();
         }
+        
+        return Promise.resolve();
     }
     
     function isFavorite(id){ 
