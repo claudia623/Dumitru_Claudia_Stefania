@@ -139,25 +139,19 @@
         } 
     }
     
+    var currentClickListener = null;
+    
     function attachEventHandlers(products){
         var root = document.getElementById('favorites-root');
-        if(!root || isAttachingHandlers) return;
+        if(!root) return;
         
-        isAttachingHandlers = true;
-        
-        // Remove old listeners by cloning and replacing
-        var newRoot = root.cloneNode(false);
-        root.parentNode.replaceChild(newRoot, root);
-        root = newRoot;
-        
-        // Clone products HTML back
-        var productsWrap = document.querySelector('.products-wrap');
-        if(productsWrap){
-            root.appendChild(productsWrap.cloneNode(true));
+        // Remove old event listener if it exists
+        if(currentClickListener){
+            root.removeEventListener('click', currentClickListener);
         }
         
-        // Single event listener on new root
-        root.addEventListener('click', function(e){
+        // Create new event listener
+        currentClickListener = function(e){
             var addBtn = e.target.closest('.add-btn');
             var removeBtn = e.target.closest('.fav-remove-btn');
             
@@ -186,8 +180,10 @@
                     removeBtn.textContent = 'Șterge';
                 });
             }
-        });
+        };
         
+        // Attach single listener
+        root.addEventListener('click', currentClickListener);
         isAttachingHandlers = false;
     }
 
