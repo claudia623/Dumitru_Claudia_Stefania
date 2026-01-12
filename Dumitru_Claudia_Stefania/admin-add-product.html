@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Adaugă Produse</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .admin-container h2 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0,123,255,0.3);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .image-upload {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .image-upload:hover {
+            border-color: #007bff;
+        }
+        .image-upload.dragover {
+            border-color: #007bff;
+            background: #f0f8ff;
+        }
+        .image-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .preview-item {
+            position: relative;
+            border-radius: 4px;
+            overflow: hidden;
+            background: white;
+            border: 1px solid #ddd;
+        }
+        .preview-item img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+        }
+        .preview-item .remove {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        .submit-btn:hover {
+            background: #218838;
+        }
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .alert {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .alert.error {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        .alert.success {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        .not-authorized {
+            text-align: center;
+            padding: 40px;
+            color: #d32f2f;
+        }
+    </style>
+</head>
+<body class="site-layout">
+    <header>
+        <h1>Magazin de Plușuri Croșetate - Admin Panel</h1>
+        <nav>
+            <div class="nav-center">
+                <a href="index.html">Acasă</a>
+                <a href="produse.html">Produse</a>
+            </div>
+            <div class="nav-right">
+                <a href="login.html" class="login-link">Login</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div id="not-admin" class="not-authorized" style="display: none;">
+            <h2>Acces Refuzat</h2>
+            <p>Doar administratorii pot accesa această pagină.</p>
+            <a href="index.html" style="color: #007bff; text-decoration: none;">Înapoi la Acasă</a>
+        </div>
+
+        <div id="admin-panel" class="admin-container" style="display: none;">
+            <h2>Adauga Produs Nou</h2>
+            
+            <div id="alert" class="alert"></div>
+
+            <form id="product-form" enctype="multipart/form-data" onsubmit="handleSubmit(event); return false;">
+                
+                <div class="form-group">
+                    <label for="name">Nume Produs *</label>
+                    <input type="text" id="name" name="nume_produs" required placeholder="Ex: Hamster mic">
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Descriere *</label>
+                    <textarea id="description" name="descriere" required placeholder="Descriere detaliată..."></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="price">Preț (RON) *</label>
+                        <input type="number" id="price" name="pret_unitar" required min="0" step="0.01" placeholder="40.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="price-discount">Preț cu Reducere (opțional)</label>
+                        <input type="number" id="price-discount" name="pret_reducere" min="0" step="0.01" placeholder="30.00">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="stock">Stoc *</label>
+                        <input type="number" id="stock" name="stoc" required min="0" placeholder="5">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Categorie</label>
+                        <select id="category" name="id_categorie">
+                            <option value="">-- Selectează Categorie --</option>
+                            <option value="1">Plușuri Mici</option>
+                            <option value="2">Plușuri Medii</option>
+                            <option value="3">Plușuri Mari</option>
+                            <option value="4">Pokemon</option>
+                            <option value="5">Creaturi Fantastice</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="material">Material</label>
+                        <input type="text" id="material" name="material" placeholder="Ex: Bumbac 100%">
+                    </div>
+                    <div class="form-group">
+                        <label for="size">Mărime</label>
+                        <input type="text" id="size" name="marime" placeholder="Ex: 20cm">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="colors">Culori Disponibile</label>
+                        <input type="text" id="colors" name="culori_disponibile" placeholder="Ex: roșu, albastru, verde">
+                    </div>
+                    <div class="form-group">
+                        <label for="delivery-time">Timp Livrare (zile)</label>
+                        <input type="number" id="delivery-time" name="timp_livrare_zile" min="0" value="7">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="images">Imagini Produs *</label>
+                    <div class="image-upload" id="dropzone">
+                        <p>🖼️ Trageaza imagini aici sau <strong>click pentru a selecta</strong></p>
+                        <p style="font-size: 12px; color: #999;">Format: JPG, PNG, GIF, WebP | Max 10MB per imagine</p>
+                        <input type="file" id="images" name="imagini" multiple accept="image/*" style="display: none;">
+                    </div>
+                    <div class="image-preview" id="preview"></div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submit-btn">Adauga Produs</button>
+            </form>
+        </div>
+    </main>
+
+    <footer style="margin-top: 60px; padding: 20px; text-align: center; border-top: 1px solid #ddd; color: #666;">
+        <p>&copy; 2025 Magazin Plușuri Croșetate. Admin Panel.</p>
+    </footer>
+
+    <script src="auth-api.js"></script>
+    <script src="products-api.js"></script>
+    <script>
+        var selectedFiles = [];
+
+        // =====================================================
+        // AUTH CHECK
+        // =====================================================
+
+        function checkAuth(){
+            var user = auth.getCurrentUser();
+            if(!user || user.rol !== 'admin'){
+                document.getElementById('not-admin').style.display = 'block';
+                document.getElementById('admin-panel').style.display = 'none';
+                return false;
+            }
+            document.getElementById('admin-panel').style.display = 'block';
+            return true;
+        }
+
+        // =====================================================
+        // FILE UPLOAD HANDLING
+        // =====================================================
+
+        var dropzone = document.getElementById('dropzone');
+        var fileInput = document.getElementById('images');
+        var preview = document.getElementById('preview');
+
+        // Click to select
+        dropzone.addEventListener('click', function(){
+            fileInput.click();
+        });
+
+        // File input change
+        fileInput.addEventListener('change', function(e){
+            addFiles(e.target.files);
+        });
+
+        // Drag and drop
+        dropzone.addEventListener('dragover', function(e){
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+
+        dropzone.addEventListener('dragleave', function(){
+            dropzone.classList.remove('dragover');
+        });
+
+        dropzone.addEventListener('drop', function(e){
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            addFiles(e.dataTransfer.files);
+        });
+
+        function addFiles(files){
+            for(var i = 0; i < files.length && selectedFiles.length < 10; i++){
+                var file = files[i];
+                if(file.type.startsWith('image/')){
+                    selectedFiles.push(file);
+                }
+            }
+            renderPreview();
+        }
+
+        function renderPreview(){
+            preview.innerHTML = '';
+            selectedFiles.forEach(function(file, index){
+                var reader = new FileReader();
+                reader.onload = function(e){
+                    var item = document.createElement('div');
+                    item.className = 'preview-item';
+                    item.innerHTML = 
+                        '<img src="' + e.target.result + '" alt="preview">' +
+                        '<button type="button" class="remove" onclick="removeFile(' + index + ')">✕</button>';
+                    preview.appendChild(item);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function removeFile(index){
+            selectedFiles.splice(index, 1);
+            renderPreview();
+        }
+
+        // =====================================================
+        // FORM SUBMIT
+        // =====================================================
+
+        function handleSubmit(e){
+            e.preventDefault();
+
+            if(selectedFiles.length === 0){
+                showAlert('Selectează cel puțin o imagine', 'error');
+                return;
+            }
+
+            var form = document.getElementById('product-form');
+            var formData = new FormData();
+
+            // Adauga form fields
+            formData.append('nume_produs', document.getElementById('name').value);
+            formData.append('descriere', document.getElementById('description').value);
+            formData.append('pret_unitar', document.getElementById('price').value);
+            formData.append('pret_reducere', document.getElementById('price-discount').value);
+            formData.append('stoc', document.getElementById('stock').value);
+            formData.append('id_categorie', document.getElementById('category').value);
+            formData.append('material', document.getElementById('material').value);
+            formData.append('marime', document.getElementById('size').value);
+            formData.append('culori_disponibile', document.getElementById('colors').value);
+            formData.append('timp_livrare_zile', document.getElementById('delivery-time').value);
+
+            // Adauga imagini
+            selectedFiles.forEach(function(file){
+                formData.append('imagini', file);
+            });
+
+            // Submit
+            var token = auth.getToken();
+            document.getElementById('submit-btn').disabled = true;
+
+            fetch('http://localhost:3000/api/produse', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                body: formData
+            })
+            .then(function(res){
+                if(!res.ok) return res.json().then(function(err){ throw new Error(err.error); });
+                return res.json();
+            })
+            .then(function(data){
+                showAlert('Produs adăugat cu succes! ID: ' + data.id_produs, 'success');
+                form.reset();
+                selectedFiles = [];
+                renderPreview();
+                document.getElementById('submit-btn').disabled = false;
+            })
+            .catch(function(err){
+                showAlert('Eroare: ' + err.message, 'error');
+                document.getElementById('submit-btn').disabled = false;
+            });
+        }
+
+        function showAlert(message, type){
+            var alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = 'alert ' + type;
+            alert.style.display = 'block';
+            setTimeout(function(){
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        // =====================================================
+        // PAGE LOAD
+        // =====================================================
+
+        document.addEventListener('DOMContentLoaded', function(){
+            if(!checkAuth()){
+                // Redirect la login dupa 3 secunde
+                setTimeout(function(){
+                    window.location.href = 'login.html';
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>

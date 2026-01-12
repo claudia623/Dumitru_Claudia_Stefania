@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Comanda curentă</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="site-layout">
+  <header>
+    <h1>Magazin de Plușuri Croșetate</h1>
+    <nav>
+      <div class="nav-center">
+        <a href="index.html">Acasă</a>
+        <a href="produse.html">Produse</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="nav-right">
+        <a href="cart.html" class="cart-icon" title="Coș de cumpărături">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M7 20a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7.16 16h9.68c.8 0 1.5-.48 1.8-1.22l3.24-7.24A1 1 0 0 0 21 6H6.21l-.94-2.36A1 1 0 0 0 4.34 2H1v2h2.34l3.6 9.03-1.35 2.44C4.52 16.37 5.48 18 7 18h12v-2H7.42a.25.25 0 0 1-.22-.13l.96-1.87z"/></svg>
+          <span class="cart-badge" id="cart-badge" style="display:none">0</span>
+        </a>
+        <a href="login.html" class="login-link">Login</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h2>Comanda curentă</h2>
+    <div id="order-root" style="margin-top:16px"></div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-about"><h4>Despre noi</h4><p>Plușuri croșetate manual.</p></div>
+        <div class="footer-contact"><h4>Contact</h4><p>Email: <a href="mailto:plusuricrosetate@email.com">plusuricrosetate@email.com</a></p></div>
+        <div class="footer-links"><h4>Link-uri</h4><p><a href="produse.html">Produse</a></p></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="favorites.js"></script>
+  <script src="products-api.js"></script>
+  <script src="cart.js"></script>
+  <script src="auth-api.js"></script>
+  <script src="site-ui.js"></script>
+  <script>
+    (function(){
+      function total(cart){ return (cart||[]).reduce(function(s,i){ return s + Number((i.price||i.pret_unitar||0)) * Number((i.qty||i.cantitate||1)); }, 0); }
+      function toast(m){ try{ window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:m, position:'center'}})); }catch(e){} }
+      document.addEventListener('DOMContentLoaded', function(){
+        var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
+        if(!u){ window.location.href = 'login.html'; return; }
+        var root = document.getElementById('order-root');
+        if(!window.cartAPI || !window.cartAPI.getCart){ root.innerHTML = '<p>Nu poți plasa comanda în acest moment.</p>'; return; }
+        window.cartAPI.getCart().then(function(cart){
+          cart = cart || [];
+          if(!cart.length){ root.innerHTML = '<div class="login-section"><p>Nu ai produse în comanda curentă.</p><p style="margin-top:8px"><a class="user-menu-item" href="produse.html">Mergi la produse</a> sau <a class="user-menu-item" href="cart.html">vezi coșul</a>.</p></div>'; return; }
+
+          var sum = total(cart);
+          var html = '<div class="cart-card">';
+          html += '<table class="cart-list"><thead><tr><th>Produs</th><th>Cantitate</th><th>Preț</th><th>Total</th></tr></thead><tbody>';
+          cart.forEach(function(it){ var price = Number(it.price||it.pret_unitar||0), qty = Number(it.qty||it.cantitate||1), line = price * qty; html += '<tr><td>'+ (it.title||it.nume_produs||'') +'</td><td>'+ qty +'</td><td>'+ price +' lei</td><td>'+ line +' lei</td></tr>'; });
+          html += '</tbody></table>';
+          html += '<div style="margin-top:10px;text-align:right;font-weight:800">Total: '+ sum +' lei</div>';
+          html += '<div style="margin-top:14px;text-align:right"><a class="btn ghost" href="cart.html" style="margin-right:8px;padding:10px 12px;border:1px solid rgba(0,0,0,0.06);border-radius:8px;text-decoration:none;color:var(--accent);font-weight:800">Vezi coșul</a>'+
+                  '<button id="place-order" class="add-btn">Finalizează comanda</button></div>';
+          html += '</div>';
+          root.innerHTML = html;
+
+          document.getElementById('place-order').addEventListener('click', function(){
+            if(!window.productsAPI || !window.productsAPI.createOrder){ toast('API comenzi indisponibil'); return; }
+            window.productsAPI.createOrder({
+              nume_client: u.username,
+              email_client: u.email,
+              telefon_client: '0722 000 000',
+              adresa_livrare: 'Str. Exemplu 1',
+              oras_livrare: 'Bucuresti',
+              cod_postal_livrare: '010010',
+              tara_livrare: 'Romania',
+              metoda_plata: 'plata_la_livrare',
+              note: 'Comandă plasată din UI'
+            }).then(function(){
+              toast('Comanda a fost plasată!');
+              window.location.href = 'orders.html';
+            }).catch(function(err){ toast(err.message || 'Eroare la plasarea comenzii'); });
+          });
+        }).catch(function(err){ root.innerHTML = '<p style="color:red">Eroare la încărcarea coșului.</p>'; console.error(err); });
+      });
+    })();
+  </script>
+</body>
+</html>

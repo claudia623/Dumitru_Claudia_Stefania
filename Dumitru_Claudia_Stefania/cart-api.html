@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coș de Cumpărături - Magazin Plușuri</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .cart-main {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 20px;
+        }
+        .cart-empty {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .cart-empty svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        .cart-items-container {
+            background: #f9f9f9;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .cart-item {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            align-items: center;
+        }
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+        .cart-item-image {
+            width: 100px;
+            height: 100px;
+            background: #e0e0e0;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .cart-item-info {
+            flex: 1;
+        }
+        .cart-item-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .cart-item-price {
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .cart-item-color {
+            font-size: 14px;
+            color: #999;
+        }
+        .cart-item-quantity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0 0 0;
+        }
+        .cart-item-quantity input {
+            width: 60px;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .cart-item-subtotal {
+            text-align: right;
+            min-width: 100px;
+        }
+        .subtotal-price {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .remove-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        .remove-btn:hover {
+            background: #cc0000;
+        }
+        .cart-summary {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+            max-width: 400px;
+            margin-left: auto;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .summary-row.total {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #333;
+            margin-top: 12px;
+        }
+        .summary-row.total:last-child {
+            border-bottom: none;
+        }
+        .checkout-btn {
+            width: 100%;
+            padding: 14px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        .checkout-btn:hover {
+            background: #218838;
+        }
+        .checkout-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .continue-shopping {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .continue-shopping a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .continue-shopping a:hover {
+            text-decoration: underline;
+        }
+        .error {
+            background: #ffebee;
+            color: #d32f2f;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="site-layout">
+    <header>
+        <h1>Magazin de Plușuri Croșetate</h1>
+        <nav>
+            <div class="nav-center">
+                <a href="index.html">Acasă</a>
+                <a href="produse.html">Produse</a>
+                <a href="contact.html">Contact</a>
+            </div>
+            <div class="nav-right">
+                <a href="cart.html" class="cart-icon" title="Coș de cumpărături">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M7 20a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7.16 16h9.68c.8 0 1.5-.48 1.8-1.22l3.24-7.24A1 1 0 0 0 21 6H6.21l-.94-2.36A1 1 0 0 0 4.34 2H1v2h2.34l3.6 9.03-1.35 2.44C4.52 16.37 5.48 18 7 18h12v-2H7.42a.25.25 0 0 1-.22-.13l.96-1.87z"/></svg>
+                    <span class="cart-badge" id="cart-badge" style="display:none">0</span>
+                </a>
+                <a href="login.html" class="login-link">Login</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="cart-main">
+            <div class="cart-header">
+                <h2>Coș de Cumpărături</h2>
+                <a href="produse.html" style="color: #007bff; text-decoration: none;">← Înapoi la Produse</a>
+            </div>
+
+            <div id="error" class="error"></div>
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Se încarcă cosul...</p>
+            </div>
+            
+            <div id="cart-content">
+                <!-- Content loaded here -->
+            </div>
+        </div>
+    </main>
+
+    <footer style="margin-top: 60px; padding: 20px; text-align: center; border-top: 1px solid #ddd; color: #666;">
+        <p>&copy; 2025 Magazin Plușuri Croșetate. Toate drepturile rezervate.</p>
+    </footer>
+
+    <script src="auth-api.js"></script>
+    <script src="products-api.js"></script>
+    <script>
+        var currentUser = null;
+
+        // Check if user is logged in
+        function checkAuth(){
+            currentUser = auth.getCurrentUser();
+            if(!currentUser){
+                document.getElementById('cart-content').innerHTML = 
+                    '<div class="cart-empty">' +
+                    '<p style="font-size: 18px;">Trebuie să te loghezi pentru a accesa cosul</p>' +
+                    '<a href="login.html" style="color: #007bff; text-decoration: none; font-weight: 600;">Mergi la Login</a>' +
+                    '</div>';
+                return false;
+            }
+            return true;
+        }
+
+        // Load cart items
+        function loadCart(){
+            if(!checkAuth()) return;
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('cart-content').innerHTML = '';
+
+            productsAPI.getCart()
+                .then(function(items){
+                    document.getElementById('loading').style.display = 'none';
+
+                    if(items.length === 0){
+                        document.getElementById('cart-content').innerHTML = 
+                            '<div class="cart-empty">' +
+                            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M7 20a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7.16 16h9.68c.8 0 1.5-.48 1.8-1.22l3.24-7.24A1 1 0 0 0 21 6H6.21l-.94-2.36A1 1 0 0 0 4.34 2H1v2h2.34l3.6 9.03-1.35 2.44C4.52 16.37 5.48 18 7 18h12v-2H7.42a.25.25 0 0 1-.22-.13l.96-1.87z"/></svg>' +
+                            '<h3>Cosul este gol</h3>' +
+                            '<p>Nu ai adăugat încă nicio produs</p>' +
+                            '<a href="produse.html" style="display: inline-block; margin-top: 20px; color: #007bff; text-decoration: none; font-weight: 600;">Explorează Produse →</a>' +
+                            '</div>';
+                        return;
+                    }
+
+                    renderCart(items);
+                })
+                .catch(function(err){
+                    document.getElementById('loading').style.display = 'none';
+                    showError(err.message);
+                });
+        }
+
+        // Render cart items
+        function renderCart(items){
+            var html = '<div class="cart-items-container">';
+            var totalProduse = 0;
+            var totalGeneral = 0;
+
+            items.forEach(function(item){
+                var subtotal = item.pret_unitar * item.cantitate;
+                totalProduse += subtotal;
+
+                var imgHtml = '';
+                if(item.imagine_id){
+                    var imgUrl = productsAPI.getProductImage(item.id_produs, item.imagine_id);
+                    imgHtml = '<img src="' + imgUrl + '" alt="' + item.nume_produs + '" class="cart-item-image">';
+                }
+
+                html += 
+                    '<div class="cart-item">' +
+                    imgHtml +
+                    '<div class="cart-item-info">' +
+                    '<div class="cart-item-title">' + item.nume_produs + '</div>' +
+                    '<div class="cart-item-price">' + item.pret_unitar + ' RON / buc</div>' +
+                    (item.culoare_selectata ? '<div class="cart-item-color">Culoare: ' + item.culoare_selectata + '</div>' : '') +
+                    '<div class="cart-item-quantity">' +
+                    '<label>Cantitate:</label>' +
+                    '<input type="number" min="1" max="99" value="' + item.cantitate + '" ' +
+                    'onchange="updateQuantity(' + item.id_cos + ', this.value)">' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="cart-item-subtotal">' +
+                    '<div class="subtotal-price">' + subtotal.toFixed(2) + ' RON</div>' +
+                    '<button class="remove-btn" onclick="removeItem(' + item.id_cos + ')">Șterge</button>' +
+                    '</div>' +
+                    '</div>';
+            });
+
+            html += '</div>';
+
+            const taxaTransport = 15;
+            const taxaAmbalaj = 5;
+            totalGeneral = totalProduse + taxaTransport + taxaAmbalaj;
+
+            html += 
+                '<div class="cart-summary">' +
+                '<div class="summary-row">' +
+                '<span>Subtotal:</span>' +
+                '<span>' + totalProduse.toFixed(2) + ' RON</span>' +
+                '</div>' +
+                '<div class="summary-row">' +
+                '<span>Transport:</span>' +
+                '<span>' + taxaTransport + '.00 RON</span>' +
+                '</div>' +
+                '<div class="summary-row">' +
+                '<span>Ambalaj:</span>' +
+                '<span>' + taxaAmbalaj + '.00 RON</span>' +
+                '</div>' +
+                '<div class="summary-row total">' +
+                '<span>TOTAL:</span>' +
+                '<span>' + totalGeneral.toFixed(2) + ' RON</span>' +
+                '</div>' +
+                '<button class="checkout-btn" onclick="goToCheckout()">Continuă cu Plata →</button>' +
+                '<div class="continue-shopping">' +
+                '<a href="produse.html">← Continua cumparaturi</a>' +
+                '</div>' +
+                '</div>';
+
+            document.getElementById('cart-content').innerHTML = html;
+        }
+
+        function updateQuantity(id_cos, cantitate){
+            cantitate = parseInt(cantitate);
+            if(cantitate < 1 || isNaN(cantitate)){
+                alert('Cantitate invalidă');
+                return;
+            }
+
+            productsAPI.updateCartItem(id_cos, cantitate)
+                .then(function(){
+                    loadCart();
+                })
+                .catch(function(err){
+                    alert('Eroare: ' + err.message);
+                    loadCart();
+                });
+        }
+
+        function removeItem(id_cos){
+            if(confirm('Ești sigur că vrei să ștergi acest produs?')){
+                productsAPI.deleteCartItem(id_cos)
+                    .then(function(){
+                        loadCart();
+                    })
+                    .catch(function(err){
+                        alert('Eroare: ' + err.message);
+                    });
+            }
+        }
+
+        function goToCheckout(){
+            // Navighează la pagina de checkout
+            // Puteți crea o pagină checkout.html care prelucrează plata
+            window.location.href = 'checkout.html';
+        }
+
+        function showError(message){
+            var el = document.getElementById('error');
+            el.textContent = message;
+            el.style.display = 'block';
+        }
+
+        // Load cart on page load
+        document.addEventListener('DOMContentLoaded', loadCart);
+    </script>
+</body>
+</html>
