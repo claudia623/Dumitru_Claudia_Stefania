@@ -48,6 +48,16 @@
   <script src="site-ui.js"></script>
   <script>
     (function(){
+      // Clean up invalid favorites (fix old 'p1' entries from previous test)
+      var fav = JSON.parse(localStorage.getItem('favorites') || '[]');
+      var cleaned = fav.filter(function(id){ 
+        return String(id).match(/^\d+$/); // Keep only numeric IDs
+      });
+      if(cleaned.length !== fav.length){
+        console.log('Cleaned favorites:', fav, '→', cleaned);
+        localStorage.setItem('favorites', JSON.stringify(cleaned));
+      }
+      
       document.addEventListener('DOMContentLoaded', function(){
         var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
         if(!u){ window.location.href = 'login.html'; }
