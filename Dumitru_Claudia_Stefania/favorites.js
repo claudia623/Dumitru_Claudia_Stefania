@@ -39,17 +39,21 @@
     
     function remove(id){
       if(!id) return Promise.resolve();
+      console.log('remove() called for id:', id);
       var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
+      console.log('Current user:', u);
       
       // If logged in, remove from backend too
       if(u && window.productsAPI && window.productsAPI.removeFavorite){
+        console.log('Calling backend API removeFavorite...');
         return window.productsAPI.removeFavorite(id).then(function(){
+          console.log('Backend remove successful, updating localStorage...');
           var f = getFavorites(); 
           var out = f.filter(function(x){ return x !== id; }); 
           save(out); 
           window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Eliminat din favorite', position:'center'}})); 
         }).catch(function(err){
-          console.error('Error removing favorite:', err);
+          console.error('Error removing favorite from backend:', err);
           // Fallback: remove from localStorage anyway
           var f = getFavorites(); 
           var out = f.filter(function(x){ return x !== id; }); 
@@ -57,6 +61,7 @@
           window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Eliminat din favorite', position:'center'}})); 
         });
       } else {
+        console.log('Not logged in or productsAPI not available, removing from localStorage only');
         // Not logged in: just remove from localStorage
         var f = getFavorites(); 
         var out = f.filter(function(x){ return x !== id; }); 
@@ -118,15 +123,28 @@
         
         // attach remove handlers for favorites page - wait for Promise to resolve
         root.querySelectorAll('.fav-remove-btn').forEach(function(b){ 
-            b.addEventListener('click', function(){ 
-                var id=b.dataset.id; 
+            b.addEventListener('click', function(e){ 
+                e.preventDefault();
+                e.stopPropagation();
+                var id=b.dataset.id;
+                console.log('Removing favorite:', id);
                 b.disabled = true;
-                remove(id).then(function(){
-                  renderFavoritesPage(); 
-                }).catch(function(err){
-                  console.error('Error:', err);
-                  renderFavoritesPage();
-                });
+                b.textContent = 'Se șterge...';
+                var promise = remove(id);
+                if(promise && promise.then){
+                    promise.then(function(){
+                        console.log('Remove succeeded, re-rendering...');
+                        renderFavoritesPage(); 
+                    }).catch(function(err){
+                        console.error('Remove error:', err);
+                        b.disabled = false;
+                        b.textContent = 'Șterge';
+                        alert('Eroare la ștergere: ' + (err.message || err));
+                    });
+                } else {
+                    console.log('No promise returned');
+                    renderFavoritesPage();
+                }
             }); 
         });
     }catch(e){ console.warn('renderFavoritesPage err', e); root.innerHTML = '<p>Eroare la încărcarea favoritelor.</p>'; } }
