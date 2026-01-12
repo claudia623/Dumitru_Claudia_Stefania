@@ -1,162 +1,182 @@
 (function(){
     var KEY = 'favorites';
-    function getFavorites(){ try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){ return []; } }
-    function save(list){ localStorage.setItem(KEY, JSON.stringify(list)); window.dispatchEvent(new CustomEvent('favoritesUpdated',{detail:{favorites:list}})); }
+    
+    function getFavorites(){ 
+        try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }
+        catch(e){ return []; } 
+    }
+    
+    function save(list){ 
+        localStorage.setItem(KEY, JSON.stringify(list)); 
+        window.dispatchEvent(new CustomEvent('favoritesUpdated',{detail:{favorites:list}})); 
+    }
+    
     function add(id){
-      if(!id) return Promise.resolve();
-      var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
-      
-      // If logged in, add to backend too
-      if(u && window.productsAPI && window.productsAPI.addFavorite){
-        return window.productsAPI.addFavorite(id).then(function(){
-          var f = getFavorites(); 
-          if(f.indexOf(id) === -1){ 
-            f.push(id); 
-            save(f); 
+        if(!id) return Promise.resolve();
+        var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
+        
+        if(u && window.productsAPI && window.productsAPI.addFavorite){
+            return window.productsAPI.addFavorite(id)
+                .then(function(){
+                    var f = getFavorites(); 
+                    if(f.indexOf(String(id)) === -1){ 
+                        f.push(String(id)); 
+                        save(f); 
+                    }
+                    window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Adăugat la favorite', position:'center'}})); 
+                })
+                .catch(function(err){
+                    console.error('Error adding favorite:', err);
+                    var f = getFavorites(); 
+                    if(f.indexOf(String(id)) === -1){ 
+                        f.push(String(id)); 
+                        save(f); 
+                    }
+                });
+        } else {
+            var f = getFavorites(); 
+            if(f.indexOf(String(id)) === -1){ 
+                f.push(String(id)); 
+                save(f); 
+            }
             window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Adăugat la favorite', position:'center'}})); 
-          }
-        }).catch(function(err){
-          console.error('Error adding favorite:', err);
-          // Fallback: add to localStorage anyway
-          var f = getFavorites(); 
-          if(f.indexOf(id) === -1){ 
-            f.push(id); 
-            save(f); 
-            window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Adăugat la favorite', position:'center'}})); 
-          }
-        });
-      } else {
-        // Not logged in: just add to localStorage
-        var f = getFavorites(); 
-        if(f.indexOf(id) === -1){ 
-          f.push(id); 
-          save(f); 
-          window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Adăugat la favorite', position:'center'}})); 
+            return Promise.resolve();
         }
-        return Promise.resolve();
-      }
     }
     
     function remove(id){
-      if(!id) return Promise.resolve();
-      console.log('remove() called for id:', id);
-      var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
-      console.log('Current user:', u);
-      
-      // If logged in, remove from backend too
-      if(u && window.productsAPI && window.productsAPI.removeFavorite){
-        console.log('Calling backend API removeFavorite...');
-        return window.productsAPI.removeFavorite(id).then(function(){
-          console.log('Backend remove successful, updating localStorage...');
-          var f = getFavorites(); 
-          var out = f.filter(function(x){ return x !== id; }); 
-          save(out); 
-          window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Eliminat din favorite', position:'center'}})); 
-        }).catch(function(err){
-          console.error('Error removing favorite from backend:', err);
-          // Fallback: remove from localStorage anyway
-          var f = getFavorites(); 
-          var out = f.filter(function(x){ return x !== id; }); 
-          save(out);
-          window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Eliminat din favorite', position:'center'}})); 
-        });
-      } else {
-        console.log('Not logged in or productsAPI not available, removing from localStorage only');
-        // Not logged in: just remove from localStorage
-        var f = getFavorites(); 
-        var out = f.filter(function(x){ return x !== id; }); 
-        save(out); 
-        window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Eliminat din favorite', position:'center'}})); 
-        return Promise.resolve();
-      }
+        if(!id) return Promise.resolve();
+        var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
+        
+        if(u && window.productsAPI && window.productsAPI.removeFavorite){
+            return window.productsAPI.removeFavorite(id)
+                .then(function(){
+                    var f = getFavorites(); 
+                    var out = f.filter(function(x){ return String(x) !== String(id); }); 
+                    save(out);
+                    window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Eliminat din favorite', position:'center'}})); 
+                })
+                .catch(function(err){
+                    console.error('Error removing favorite from backend:', err);
+                    var f = getFavorites(); 
+                    var out = f.filter(function(x){ return String(x) !== String(id); }); 
+                    save(out);
+                });
+        } else {
+            var f = getFavorites(); 
+            var out = f.filter(function(x){ return String(x) !== String(id); }); 
+            save(out);
+            window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Eliminat din favorite', position:'center'}})); 
+            return Promise.resolve();
+        }
     }
     
-    function isFavorite(id){ var f = getFavorites(); return f.indexOf(id) !== -1; }
+    function isFavorite(id){ 
+        var f = getFavorites(); 
+        return f.indexOf(String(id)) !== -1; 
+    }
+    
     function toggle(id){
-      var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
-      if(!u){
-        localStorage.setItem('pendingFavorite', JSON.stringify({productId: id, returnURL: window.location.href}));
-        window.location.href = 'login.html';
-        return Promise.resolve();
-      }
-      if(isFavorite(id)) return remove(id); 
-      else return add(id);
+        var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
+        if(!u){
+            localStorage.setItem('pendingFavorite', JSON.stringify({productId: id, returnURL: window.location.href}));
+            window.location.href = 'login.html';
+            return Promise.resolve();
+        }
+        if(isFavorite(id)) return remove(id); 
+        else return add(id);
     }
 
-    // helper to render favorites list on favorites.html
-    async function renderFavoritesPage(){ try{
-        var root = document.getElementById('favorites-root'); if(!root) return;
-        var fav = getFavorites();
-        if(!fav || !fav.length){ root.innerHTML = '<p>Nu ai produse în favorite.</p>'; return; }
-        
-        root.innerHTML = '<p>Se încarcă favoritele...</p>';
-        
-        var products = await productsAPI.getProducts();
-        if(!products || !products.length) { root.innerHTML = '<p>Produse indisponibile.</p>'; return; }
-        
-        var html = '<div class="products-wrap">';
-        fav.forEach(function(id){ 
-            var p = products.find(function(x){return String(x.id_produs)===String(id)});
-            if(!p) return;
-            var imageUrl = p.imagini && p.imagini[0] ? productsAPI.getProductImage(p.id_produs, p.imagini[0].id_imagine) : '';
-            html += '<div class="product-card" data-id="'+p.id_produs+'" style="max-width:260px">';
-            html += '<a class="product-link" href="product.html?id='+encodeURIComponent(p.id_produs)+'"><img src="'+imageUrl+'" alt="'+p.nume_produs+'" style="width:100%;border-radius:10px"></a>';
-            html += '<h3><a class="product-link" href="product.html?id='+encodeURIComponent(p.id_produs)+'">'+p.nume_produs+'</a></h3>';
-            html += '<p>Preț: '+p.pret_unitar+' lei</p>';
-            html += '<div style="display:flex;gap:8px"><button class="add-btn" data-id="'+p.id_produs+'">Adaugă în coș</button><button class="fav-remove-btn" data-id="'+p.id_produs+'">Șterge</button></div>';
+    async function renderFavoritesPage(){ 
+        try{
+            var root = document.getElementById('favorites-root'); 
+            if(!root) return;
+            
+            var fav = getFavorites();
+            if(!fav || !fav.length){ 
+                root.innerHTML = '<p>Nu ai produse în favorite.</p>'; 
+                return; 
+            }
+            
+            root.innerHTML = '<p>Se încarcă favoritele...</p>';
+            
+            var products = await productsAPI.getProducts();
+            if(!products || !products.length) { 
+                root.innerHTML = '<p>Produse indisponibile.</p>'; 
+                return; 
+            }
+            
+            var html = '<div class="products-wrap">';
+            fav.forEach(function(id){ 
+                var p = products.find(function(x){return String(x.id_produs)===String(id)});
+                if(!p) return;
+                var imageUrl = p.imagini && p.imagini[0] ? productsAPI.getProductImage(p.id_produs, p.imagini[0].id_imagine) : '';
+                html += '<div class="product-card" data-id="'+p.id_produs+'" style="max-width:260px">';
+                html += '<a class="product-link" href="product.html?id='+encodeURIComponent(p.id_produs)+'"><img src="'+imageUrl+'" alt="'+p.nume_produs+'" style="width:100%;border-radius:10px"></a>';
+                html += '<h3><a class="product-link" href="product.html?id='+encodeURIComponent(p.id_produs)+'">'+p.nume_produs+'</a></h3>';
+                html += '<p>Preț: '+p.pret_unitar+' lei</p>';
+                html += '<div style="display:flex;gap:8px"><button class="add-btn" data-id="'+p.id_produs+'">Adaugă în coș</button><button class="fav-remove-btn" data-id="'+p.id_produs+'">Șterge</button></div>';
+                html += '</div>';
+            });
             html += '</div>';
-        });
-        html += '</div>';
-        root.innerHTML = html;
+            root.innerHTML = html;
+            
+            attachEventHandlers(products);
+        }
+        catch(e){ 
+            console.warn('renderFavoritesPage err', e); 
+            root.innerHTML = '<p>Eroare la încărcarea favoritelor.</p>'; 
+        } 
+    }
+    
+    function attachEventHandlers(products){
+        var root = document.getElementById('favorites-root');
+        if(!root) return;
         
-        // attach add to cart handlers
-        root.querySelectorAll('.add-btn').forEach(function(b){ 
-            b.addEventListener('click', function(){ 
-                var id=b.dataset.id;
+        root.addEventListener('click', function(e){
+            var addBtn = e.target.closest('.add-btn');
+            var removeBtn = e.target.closest('.fav-remove-btn');
+            
+            if(addBtn){
+                e.preventDefault();
+                e.stopPropagation();
+                var id = addBtn.dataset.id;
                 var p = products.find(function(x){return String(x.id_produs)===String(id)});
                 if(!p) return;
                 var imageUrl = p.imagini && p.imagini[0] ? productsAPI.getProductImage(p.id_produs, p.imagini[0].id_imagine) : '';
                 var item = { id: p.id_produs, title: p.nume_produs, price: p.pret_unitar, image: imageUrl, qty: 1 };
                 if(window.cartAPI && window.cartAPI.addToCart) window.cartAPI.addToCart(item);
-            });
-        });
-        
-        // attach remove handlers for favorites page - wait for Promise to resolve
-        root.querySelectorAll('.fav-remove-btn').forEach(function(b){ 
-            b.addEventListener('click', function(e){ 
+            }
+            
+            if(removeBtn){
                 e.preventDefault();
                 e.stopPropagation();
-                var id=b.dataset.id;
-                console.log('Removing favorite:', id);
-                b.disabled = true;
-                b.textContent = 'Se șterge...';
-                var promise = remove(id);
-                if(promise && promise.then){
-                    promise.then(function(){
-                        console.log('Remove succeeded, re-rendering...');
-                        renderFavoritesPage(); 
-                    }).catch(function(err){
-                        console.error('Remove error:', err);
-                        b.disabled = false;
-                        b.textContent = 'Șterge';
-                        alert('Eroare la ștergere: ' + (err.message || err));
-                    });
-                } else {
-                    console.log('No promise returned');
-                    renderFavoritesPage();
-                }
-            }); 
+                var id = removeBtn.dataset.id;
+                removeBtn.disabled = true;
+                removeBtn.textContent = 'Se șterge...';
+                remove(id).then(function(){
+                    renderFavoritesPage(); 
+                }).catch(function(err){
+                    console.error('Remove error:', err);
+                    removeBtn.disabled = false;
+                    removeBtn.textContent = 'Șterge';
+                });
+            }
         });
-    }catch(e){ console.warn('renderFavoritesPage err', e); root.innerHTML = '<p>Eroare la încărcarea favoritelor.</p>'; } }
+    }
 
-    // on favorites update, re-render if on favorites page
     window.addEventListener('favoritesUpdated', function(){ renderFavoritesPage(); });
     document.addEventListener('DOMContentLoaded', function(){ renderFavoritesPage(); });
 
-    window.favoritesAPI = { getFavorites:getFavorites, add:add, remove:remove, isFavorite:isFavorite, toggle:toggle };
+    window.favoritesAPI = { 
+        getFavorites: getFavorites, 
+        add: add, 
+        remove: remove, 
+        isFavorite: isFavorite, 
+        toggle: toggle 
+    };
 })();
 
-// update favorites badge if present
 (function(){
     function updateBadge(){
         try{
