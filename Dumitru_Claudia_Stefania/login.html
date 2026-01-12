@@ -5,16 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Magazin Plușuri Croșetate - Login</title>
     <link rel="stylesheet" href="style.css">
-    <script>
-        function showRegister() {
-            document.querySelector('.login-section').style.display = 'none';
-            document.getElementById('register-section').style.display = 'block';
-        }
-        function showLogin() {
-            document.querySelector('.login-section').style.display = 'block';
-            document.getElementById('register-section').style.display = 'none';
-        }
-    </script>
 </head>
 <body class="site-layout">
     <header>
@@ -65,65 +55,91 @@
             </div>
         </section>
     </main>
-    <script src="site-ui.js"></script>
-    <script src="favorites.js"></script>
-    <script src="auth-api.js"></script>
+    <script defer src="auth-api.js"></script>
     <script>
-        (function(){
-            function toast(msg){ try{ window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:msg, position:'center'}})); }catch(e){} }
-            document.addEventListener('DOMContentLoaded', function(){
-                // If already logged in, show message and a quick link
-                try{
-                    var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
-                    if(u){ toast('Ești deja autentificat ca ' + u.username); }
-                }catch(e){}
-                var loginForm = document.querySelector('.login-form');
-                if (loginForm) {
-                    loginForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        var user = document.getElementById('username').value;
-                        var pass = document.getElementById('password').value;
-                        if(!window.auth || !window.auth.login){ return; }
-                        window.auth.login(user, pass).then(function(){
-                            toast('Bine ai venit!');
-                            // Check if there's a pending favorite to add
-                            var pending = null;
-                            try{ pending = JSON.parse(localStorage.getItem('pendingFavorite')||'null'); }catch(e){}
-                            if(pending && pending.productId){
-                              if(window.favoritesAPI && window.favoritesAPI.add) window.favoritesAPI.add(pending.productId);
-                              localStorage.removeItem('pendingFavorite');
-                              window.location.href = pending.returnURL || 'index.html';
-                            } else {
-                              window.location.href = 'index.html';
-                            }
-                        }).catch(function(err){ toast(err && err.message ? err.message : 'Eroare la autentificare'); });
-                    });
-                }
-                var registerForm = document.querySelector('.register-form');
-                if (registerForm) {
-                    registerForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        var ru = document.getElementById('reg-username').value;
-                        var re = document.getElementById('reg-email').value;
-                        var rp = document.getElementById('reg-password').value;
-                        if(!window.auth || !window.auth.register){ return; }
-                        window.auth.register(ru, re, rp).then(function(){
-                            toast('Cont creat cu succes!');
-                            // Check if there's a pending favorite to add
-                            var pending = null;
-                            try{ pending = JSON.parse(localStorage.getItem('pendingFavorite')||'null'); }catch(e){}
-                            if(pending && pending.productId){
-                              if(window.favoritesAPI && window.favoritesAPI.add) window.favoritesAPI.add(pending.productId);
-                              localStorage.removeItem('pendingFavorite');
-                              window.location.href = pending.returnURL || 'index.html';
-                            } else {
-                              window.location.href = 'index.html';
-                            }
-                        }).catch(function(err){ toast(err && err.message ? err.message : 'Eroare la înregistrare'); });
-                    });
-                }
-            });
-        })();
+        function showRegister() {
+            document.querySelector('.login-section').style.display = 'none';
+            document.getElementById('register-section').style.display = 'block';
+        }
+        function showLogin() {
+            document.querySelector('.login-section').style.display = 'block';
+            document.getElementById('register-section').style.display = 'none';
+        }
+        
+        function toast(msg){ 
+            var container = document.getElementById('site-toast-center');
+            if(!container){
+                container = document.createElement('div');
+                container.id = 'site-toast-center';
+                container.className = 'site-toast-center';
+                document.body.appendChild(container);
+            }
+            var t = document.createElement('div');
+            t.className = 'toast toast--enter toast--center';
+            t.textContent = msg;
+            container.appendChild(t);
+            void t.offsetWidth;
+            t.classList.remove('toast--enter');
+            t.classList.add('toast--visible');
+            setTimeout(function(){
+                t.classList.remove('toast--visible');
+                t.classList.add('toast--leave');
+                setTimeout(function(){ try{ container.removeChild(t); }catch(e){} }, 400);
+            }, 2200);
+        }
+        
+        document.addEventListener('DOMContentLoaded', function(){
+            // If already logged in, show message
+            try{
+                var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
+                if(u){ toast('Ești deja autentificat ca ' + u.username); }
+            }catch(e){}
+            
+            var loginForm = document.querySelector('.login-form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    var user = document.getElementById('username').value;
+                    var pass = document.getElementById('password').value;
+                    if(!window.auth || !window.auth.login){ return; }
+                    window.auth.login(user, pass).then(function(){
+                        toast('Bine ai venit!');
+                        var pending = null;
+                        try{ pending = JSON.parse(localStorage.getItem('pendingFavorite')||'null'); }catch(e){}
+                        if(pending && pending.productId){
+                          if(window.favoritesAPI && window.favoritesAPI.add) window.favoritesAPI.add(pending.productId);
+                          localStorage.removeItem('pendingFavorite');
+                          window.location.href = pending.returnURL || 'index.html';
+                        } else {
+                          window.location.href = 'index.html';
+                        }
+                    }).catch(function(err){ toast(err && err.message ? err.message : 'Eroare la autentificare'); });
+                });
+            }
+            
+            var registerForm = document.querySelector('.register-form');
+            if (registerForm) {
+                registerForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    var ru = document.getElementById('reg-username').value;
+                    var re = document.getElementById('reg-email').value;
+                    var rp = document.getElementById('reg-password').value;
+                    if(!window.auth || !window.auth.register){ return; }
+                    window.auth.register(ru, re, rp).then(function(){
+                        toast('Cont creat cu succes!');
+                        var pending = null;
+                        try{ pending = JSON.parse(localStorage.getItem('pendingFavorite')||'null'); }catch(e){}
+                        if(pending && pending.productId){
+                          if(window.favoritesAPI && window.favoritesAPI.add) window.favoritesAPI.add(pending.productId);
+                          localStorage.removeItem('pendingFavorite');
+                          window.location.href = pending.returnURL || 'index.html';
+                        } else {
+                          window.location.href = 'index.html';
+                        }
+                    }).catch(function(err){ toast(err && err.message ? err.message : 'Eroare la înregistrare'); });
+                });
+            }
+        });
     </script>
     <footer class="site-footer">
         <div class="container">
@@ -147,5 +163,6 @@
             <div class="footer-bottom text-center muted">&copy; 2025 Magazin Plușuri Croșetate. Toate drepturile rezervate.</div>
         </div>
     </footer>
+    <script defer src="auth-api.js"></script>
 </body>
 </html>

@@ -165,7 +165,10 @@
   // UI MANAGEMENT
   // =====================================================
 
+  var authControlsInitialized = false;
   function ensureAuthControls(){
+    if(authControlsInitialized) return;
+    authControlsInitialized = true;
     try{
       var container = document.querySelector('nav .nav-right');
       if(!container) return; 
