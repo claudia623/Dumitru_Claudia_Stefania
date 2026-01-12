@@ -2,17 +2,80 @@
     var KEY = 'favorites';
     function getFavorites(){ try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){ return []; } }
     function save(list){ localStorage.setItem(KEY, JSON.stringify(list)); window.dispatchEvent(new CustomEvent('favoritesUpdated',{detail:{favorites:list}})); }
-    function add(id){ if(!id) return; var f = getFavorites(); if(f.indexOf(id) === -1){ f.push(id); save(f); window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Adăugat la favorite', position:'center'}})); } }
-    function remove(id){ if(!id) return; var f = getFavorites(); var out = f.filter(function(x){ return x !== id; }); save(out); window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Eliminat din favorite', position:'center'}})); }
+    function add(id){
+      if(!id) return Promise.resolve();
+      var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
+      
+      // If logged in, add to backend too
+      if(u && window.productsAPI && window.productsAPI.addFavorite){
+        return window.productsAPI.addFavorite(id).then(function(){
+          var f = getFavorites(); 
+          if(f.indexOf(id) === -1){ 
+            f.push(id); 
+            save(f); 
+            window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Adăugat la favorite', position:'center'}})); 
+          }
+        }).catch(function(err){
+          console.error('Error adding favorite:', err);
+          // Fallback: add to localStorage anyway
+          var f = getFavorites(); 
+          if(f.indexOf(id) === -1){ 
+            f.push(id); 
+            save(f); 
+            window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Adăugat la favorite', position:'center'}})); 
+          }
+        });
+      } else {
+        // Not logged in: just add to localStorage
+        var f = getFavorites(); 
+        if(f.indexOf(id) === -1){ 
+          f.push(id); 
+          save(f); 
+          window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Adăugat la favorite', position:'center'}})); 
+        }
+        return Promise.resolve();
+      }
+    }
+    
+    function remove(id){
+      if(!id) return Promise.resolve();
+      var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
+      
+      // If logged in, remove from backend too
+      if(u && window.productsAPI && window.productsAPI.removeFavorite){
+        return window.productsAPI.removeFavorite(id).then(function(){
+          var f = getFavorites(); 
+          var out = f.filter(function(x){ return x !== id; }); 
+          save(out); 
+          window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Eliminat din favorite', position:'center'}})); 
+        }).catch(function(err){
+          console.error('Error removing favorite:', err);
+          // Fallback: remove from localStorage anyway
+          var f = getFavorites(); 
+          var out = f.filter(function(x){ return x !== id; }); 
+          save(out);
+          window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Eliminat din favorite', position:'center'}})); 
+        });
+      } else {
+        // Not logged in: just remove from localStorage
+        var f = getFavorites(); 
+        var out = f.filter(function(x){ return x !== id; }); 
+        save(out); 
+        window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Eliminat din favorite', position:'center'}})); 
+        return Promise.resolve();
+      }
+    }
+    
     function isFavorite(id){ var f = getFavorites(); return f.indexOf(id) !== -1; }
     function toggle(id){
       var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
       if(!u){
         localStorage.setItem('pendingFavorite', JSON.stringify({productId: id, returnURL: window.location.href}));
         window.location.href = 'login.html';
-        return;
+        return Promise.resolve();
       }
-      if(isFavorite(id)) remove(id); else add(id);
+      if(isFavorite(id)) return remove(id); 
+      else return add(id);
     }
 
     // helper to render favorites list on favorites.html
@@ -53,12 +116,17 @@
             });
         });
         
-        // attach remove handlers for favorites page
+        // attach remove handlers for favorites page - wait for Promise to resolve
         root.querySelectorAll('.fav-remove-btn').forEach(function(b){ 
             b.addEventListener('click', function(){ 
                 var id=b.dataset.id; 
-                remove(id); 
-                renderFavoritesPage(); 
+                b.disabled = true;
+                remove(id).then(function(){
+                  renderFavoritesPage(); 
+                }).catch(function(err){
+                  console.error('Error:', err);
+                  renderFavoritesPage();
+                });
             }); 
         });
     }catch(e){ console.warn('renderFavoritesPage err', e); root.innerHTML = '<p>Eroare la încărcarea favoritelor.</p>'; } }

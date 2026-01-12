@@ -116,7 +116,14 @@
               }
             }
             refreshFav();
-            favBtn.addEventListener('click', function(){ window.favoritesAPI.toggle(p.id_produs); refreshFav(); });
+            favBtn.addEventListener('click', function(){ 
+              var promise = window.favoritesAPI.toggle(p.id_produs);
+              if(promise && promise.then){
+                promise.then(function(){ refreshFav(); }).catch(function(){ refreshFav(); });
+              } else {
+                refreshFav();
+              }
+            });
           }
         }catch(e){}
 

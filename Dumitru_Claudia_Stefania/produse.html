@@ -104,8 +104,20 @@
                                             fav.addEventListener('click', function(e){
                                                 e.stopPropagation();
                                                 if(window.favoritesAPI && window.favoritesAPI.toggle){ 
-                                                    window.favoritesAPI.toggle(p.id_produs); 
+                                                    var promise = window.favoritesAPI.toggle(p.id_produs);
+                                                    if(promise && promise.then){
+                                                        promise.then(function(){
+                                                            updateFavIcon();
+                                                        }).catch(function(){
+                                                            updateFavIcon();
+                                                        });
+                                                    } else {
+                                                        updateFavIcon();
+                                                    }
                                                 }
+                                            });
+                                            
+                                            function updateFavIcon(){
                                                 try{
                                                     if(window.favoritesAPI && window.favoritesAPI.isFavorite && window.favoritesAPI.isFavorite(p.id_produs)){
                                                         fav.textContent = '♥'; 
@@ -115,7 +127,7 @@
                                                         fav.classList.remove('fav-active'); 
                                                     }
                                                 }catch(e){}
-                                            });
+                                            }
 
                                             // click to navigate
                                             card.addEventListener('click', function(e){
