@@ -1,5 +1,6 @@
 (function(){
     var KEY = 'favorites';
+    var isAttachingHandlers = false;
     
     function getFavorites(){ 
         try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }
@@ -8,7 +9,10 @@
     
     function save(list){ 
         localStorage.setItem(KEY, JSON.stringify(list)); 
-        window.dispatchEvent(new CustomEvent('favoritesUpdated',{detail:{favorites:list}})); 
+        // Only dispatch event if we're on favorites page
+        if(document.getElementById('favorites-root')){
+            window.dispatchEvent(new CustomEvent('favoritesUpdated',{detail:{favorites:list}})); 
+        }
     }
     
     function add(id){
@@ -21,25 +25,32 @@
                     var f = getFavorites(); 
                     if(f.indexOf(String(id)) === -1){ 
                         f.push(String(id)); 
-                        save(f); 
+                        localStorage.setItem(KEY, JSON.stringify(f)); 
+                        // Single toast notification
+                        window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Adăugat la favorite', position:'center'}})); 
+                        if(document.getElementById('favorites-root')){
+                            renderFavoritesPage();
+                        }
                     }
-                    window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Adăugat la favorite', position:'center'}})); 
                 })
                 .catch(function(err){
                     console.error('Error adding favorite:', err);
                     var f = getFavorites(); 
                     if(f.indexOf(String(id)) === -1){ 
                         f.push(String(id)); 
-                        save(f); 
+                        localStorage.setItem(KEY, JSON.stringify(f)); 
                     }
                 });
         } else {
             var f = getFavorites(); 
             if(f.indexOf(String(id)) === -1){ 
                 f.push(String(id)); 
-                save(f); 
+                localStorage.setItem(KEY, JSON.stringify(f)); 
+                window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Adăugat la favorite', position:'center'}})); 
+                if(document.getElementById('favorites-root')){
+                    renderFavoritesPage();
+                }
             }
-            window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Adăugat la favorite', position:'center'}})); 
             return Promise.resolve();
         }
     }
@@ -53,20 +64,26 @@
                 .then(function(){
                     var f = getFavorites(); 
                     var out = f.filter(function(x){ return String(x) !== String(id); }); 
-                    save(out);
+                    localStorage.setItem(KEY, JSON.stringify(out));
                     window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Eliminat din favorite', position:'center'}})); 
+                    if(document.getElementById('favorites-root')){
+                        renderFavoritesPage();
+                    }
                 })
                 .catch(function(err){
                     console.error('Error removing favorite from backend:', err);
                     var f = getFavorites(); 
                     var out = f.filter(function(x){ return String(x) !== String(id); }); 
-                    save(out);
+                    localStorage.setItem(KEY, JSON.stringify(out));
                 });
         } else {
             var f = getFavorites(); 
             var out = f.filter(function(x){ return String(x) !== String(id); }); 
-            save(out);
+            localStorage.setItem(KEY, JSON.stringify(out));
             window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Eliminat din favorite', position:'center'}})); 
+            if(document.getElementById('favorites-root')){
+                renderFavoritesPage();
+            }
             return Promise.resolve();
         }
     }
@@ -131,8 +148,22 @@
     
     function attachEventHandlers(products){
         var root = document.getElementById('favorites-root');
-        if(!root) return;
+        if(!root || isAttachingHandlers) return;
         
+        isAttachingHandlers = true;
+        
+        // Remove old listeners by cloning and replacing
+        var newRoot = root.cloneNode(false);
+        root.parentNode.replaceChild(newRoot, root);
+        root = newRoot;
+        
+        // Clone products HTML back
+        var productsWrap = document.querySelector('.products-wrap');
+        if(productsWrap){
+            root.appendChild(productsWrap.cloneNode(true));
+        }
+        
+        // Single event listener on new root
         root.addEventListener('click', function(e){
             var addBtn = e.target.closest('.add-btn');
             var removeBtn = e.target.closest('.fav-remove-btn');
@@ -163,9 +194,10 @@
                 });
             }
         });
+        
+        isAttachingHandlers = false;
     }
 
-    window.addEventListener('favoritesUpdated', function(){ renderFavoritesPage(); });
     document.addEventListener('DOMContentLoaded', function(){ renderFavoritesPage(); });
 
     window.favoritesAPI = { 
@@ -188,6 +220,6 @@
             else{ el.style.display = 'inline-block'; el.textContent = count; }
         }catch(e){ console.warn('fav badge update err', e); }
     }
-    window.addEventListener('favoritesUpdated', updateBadge);
     document.addEventListener('DOMContentLoaded', updateBadge);
+    window.addEventListener('favoritesUpdated', updateBadge);
 })();
