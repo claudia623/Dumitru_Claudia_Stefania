@@ -92,6 +92,7 @@
             if(!root) return;
             
             var fav = getFavorites();
+            console.log('Favorites list:', fav);
             if(!fav || !fav.length){ 
                 root.innerHTML = '<p>Nu ai produse în favorite.</p>'; 
                 return; 
@@ -100,15 +101,25 @@
             root.innerHTML = '<p>Se încarcă favoritele...</p>';
             
             var products = await productsAPI.getProducts();
+            console.log('Products loaded:', products);
             if(!products || !products.length) { 
                 root.innerHTML = '<p>Produse indisponibile.</p>'; 
                 return; 
             }
             
             var html = '<div class="products-wrap">';
-            fav.forEach(function(id){ 
-                var p = products.find(function(x){return String(x.id_produs)===String(id)});
-                if(!p) return;
+            fav.forEach(function(favId){ 
+                console.log('Looking for favorite:', favId);
+                var p = products.find(function(x){
+                    var match = String(x.id_produs) === String(favId);
+                    console.log('  Comparing', x.id_produs, 'with', favId, ':', match);
+                    return match;
+                });
+                if(!p) {
+                    console.log('  Product not found for favorite:', favId);
+                    return;
+                }
+                console.log('  Product found:', p.nume_produs);
                 var imageUrl = p.imagini && p.imagini[0] ? productsAPI.getProductImage(p.id_produs, p.imagini[0].id_imagine) : '';
                 html += '<div class="product-card" data-id="'+p.id_produs+'" style="max-width:260px">';
                 html += '<a class="product-link" href="product.html?id='+encodeURIComponent(p.id_produs)+'"><img src="'+imageUrl+'" alt="'+p.nume_produs+'" style="width:100%;border-radius:10px"></a>';
