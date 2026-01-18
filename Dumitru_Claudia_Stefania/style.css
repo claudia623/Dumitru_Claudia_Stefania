@@ -11,6 +11,7 @@
 
 /* Reset + base */
 *{box-sizing:border-box}
+html{scroll-behavior: smooth;}
 html,body{height:100%;}
 body{
   margin:0;
@@ -19,26 +20,35 @@ body{
   color:#222;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
-  line-height:1.45;
+  line-height:1.6; /* Improved line height for mobile legibility - Req 4 */
   padding-bottom:100px; /* reserve space for footer on short pages */
 }
 
+/* Responsive Images - Req 5 */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto; /* Centered by default on mobile - Req 5 */
+}
+
 .container{
-  width:100%;
+  width:90%; /* Relative unit - Req 4 */
   max-width:var(--max-width);
   margin:0 auto;
-  padding:24px;
+  padding:1.5rem; /* Relative unit - Req 4 */
 }
 
 /* Site layout using CSS Grid: header, nav, main, aside, footer */
 .site-layout{
   display:grid;
   grid-template-columns: 1fr;
-  grid-template-rows: auto auto 1fr auto;
+  grid-template-rows: auto auto 1fr auto auto;
   grid-template-areas:
     "header"
     "nav"
     "main"
+    "aside"
     "footer";
   min-height:100vh;
   padding-top: var(--header-height); /* reserve space for fixed header */
@@ -46,20 +56,21 @@ body{
 .site-layout header{grid-area: header}
 .site-layout nav{grid-area: nav}
 .site-layout main{grid-area: main}
-.site-layout aside{grid-area: aside}
+.site-layout aside{grid-area: aside; padding: 20px; background: rgba(0,0,0,0.02); }
 .site-layout footer{grid-area: footer}
 
 /* Desktop grid: main + aside side-by-side */
 @media (min-width: 900px){
   .site-layout{
-    grid-template-columns: 240px 1fr 300px; /* optional: left nav / main / aside */
+    grid-template-columns: 200px 1fr 250px;
     grid-template-rows: auto 1fr auto;
     grid-template-areas:
       "header header header"
       "nav main aside"
       "footer footer footer";
   }
-  .site-layout nav{align-self:start}
+  .site-layout nav{align-self:start; padding: 20px 0;}
+  .site-layout aside{border-left: 1px solid rgba(0,0,0,0.05);}
 }
 
 /* Header / nav */
@@ -321,25 +332,62 @@ footer{padding:18px 0;text-align:center;color:var(--muted);font-size:0.95rem;bac
 .cart-list .btn{padding:8px 10px;border-radius:8px}
 .cart-list .btn.ghost{background:transparent;border:1px solid rgba(0,0,0,0.06)}
 
-/* On small screens product cards stack vertically and images centered */
-@media (max-width: 900px){
-  .products-wrap{flex-direction:column;align-items:center}
-  .product-card{width:100%;max-width:400px;flex:0 0 auto}
-  .product-card img{margin:0 auto;display:block}
+/* Flexbox for product cards (Requirement 2) */
+.products-wrap {
+  display: flex !important;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 20px;
+  padding: 20px 0;
 }
 
-/* Desktop: 3-column grid, equal-height cards, larger images */
+/* Individual card styling */
+.product-card {
+  flex: 0 1 300px; /* Base width of 300px, can shrink but prefers this */
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px var(--shadow);
+  padding: 15px;
+  transition: transform 0.2s;
+}
+
+.product-card img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+/* On small screens product cards stack vertically and images centered */
+@media (max-width: 900px){
+  .products-wrap{
+    flex-direction: column;
+    align-items: center;
+  }
+  .product-card{
+    width: 90%;
+    max-width: 400px;
+  }
+  .product-card img {
+    margin: 0 auto;
+  }
+}
+
+/* Desktop: ensure cards look good in flex container */
 @media (min-width: 900px){
-  .products-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:stretch}
-  .product-card{width:100%;max-width:320px;flex:0 0 auto;height:600px;box-sizing:border-box}
-  .product-card img{height:300px}
-  .product-card > .card-footer{flex-direction:column;align-items:stretch}
-  .product-card .add-btn, .product-card .fav-btn, .product-card .fav-remove-btn{width:100%;display:inline-flex;justify-content:center}
+  .product-card {
+    height: auto;
+    min-height: 450px;
+  }
 }
 
 /* Back to top button */
 #back-to-top{
-  position:fixed;right:20px;bottom:20px;z-index:200;background:var(--accent);color:white;border:none;padding:10px 12px;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,0.18);cursor:pointer;font-weight:700;display:block;opacity:0.98}
+  position:fixed;right:20px;bottom:20px;z-index:200;background:var(--accent);color:white;border:none;padding:10px 12px;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,0.18);cursor:pointer;font-weight:700;display:none;opacity:0.98}
 #back-to-top.show{display:block}
 
 /* Product detail page */
