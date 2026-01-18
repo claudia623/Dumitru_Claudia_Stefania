@@ -141,7 +141,6 @@
           var item = { id: p.id_produs, title: p.nume_produs, price: p.pret_unitar, image: firstImageUrl, qty: 1 };
           if(window.cartAPI && window.cartAPI.addToCart) window.cartAPI.addToCart(item);
           else {
-  <button id="back-to-top" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="Înapoi sus">↑</button>
             var c = JSON.parse(localStorage.getItem('cart')||'[]'); var ex = c.find(function(x){return x.id===item.id}); if(ex) ex.qty=(ex.qty||0)+1; else c.push(item); localStorage.setItem('cart', JSON.stringify(c)); window.dispatchEvent(new CustomEvent('cartUpdated',{detail:{cart:c}})); window.dispatchEvent(new CustomEvent('siteToast',{detail:{message: item.title + ' a fost adăugat în coș', position:'center'}}));
           }
         });
