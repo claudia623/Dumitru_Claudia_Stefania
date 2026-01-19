@@ -1,14 +1,12 @@
 // =====================================================
-// PRODUCTS MODULE - CONECTAT LA BACKEND API
+// MODUL PRODUSE ȘI COMENZI - CONECTAT LA BACKEND API
+// Gestionează afișarea plușurilor, coșul de pe server și plasarea comenzilor.
 // =====================================================
 
 (function(){
   const API_BASE = 'http://localhost:3000/api';
 
-  // =====================================================
-  // HELPER FUNCTIONS
-  // =====================================================
-
+  // OBTINE TOKEN-UL pentru cereri autorizate
   function getToken(){
     try{ return localStorage.getItem('auth_token'); }catch(e){ return null; }
   }
@@ -20,16 +18,15 @@
   }
 
   // =====================================================
-  // PRODUCTS API
+  // API PRODUSE
   // =====================================================
 
+  // Obține lista tuturor produselor (cu opțiuni de filtrare)
   function getProducts(options){
     options = options || {};
     var params = new URLSearchParams();
     if(options.id_categorie) params.append('id_categorie', options.id_categorie);
     if(options.search) params.append('search', options.search);
-    if(options.page) params.append('page', options.page);
-    if(options.limit) params.append('limit', options.limit);
 
     return fetch(API_BASE + '/produse?' + params.toString())
       .then(function(res){
@@ -42,6 +39,7 @@
       });
   }
 
+  // Obține detaliile pentru un singur produs (folosit în product.html)
   function getProduct(id){
     return fetch(API_BASE + '/produse/' + id)
       .then(function(res){
@@ -54,10 +52,12 @@
       });
   }
 
+  // Construiește URL-ul pentru imaginea unui produs
   function getProductImage(id_produs, id_imagine){
     return API_BASE + '/produse/' + id_produs + '/imagini/' + id_imagine;
   }
 
+  // Obține recenziile (comentariile) lăsate de clienți
   function getProductReviews(id_produs){
     return fetch(API_BASE + '/produse/' + id_produs + '/recenzii')
       .then(function(res){
@@ -71,7 +71,8 @@
   }
 
   // =====================================================
-  // CART API
+  // API COȘ (SERVER-SIDE)
+  // Permite salvarea coșului în baza de date pentru a nu fi pierdut la logout.
   // =====================================================
 
   function getCart(){

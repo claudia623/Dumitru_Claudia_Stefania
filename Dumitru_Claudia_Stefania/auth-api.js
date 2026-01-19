@@ -1,5 +1,6 @@
 // =====================================================
-// AUTH MODULE - CONECTAT LA BACKEND API
+// MODUL AUTENTIFICARE - CONECTAT LA BACKEND API
+// Gestionează Logarea, Înregistrarea și Sesiunea utilizatorului.
 // =====================================================
 
 (function(){
@@ -8,30 +9,30 @@
   var TOKEN_KEY = 'auth_token';
 
   // =====================================================
-  // HELPER FUNCTIONS
+  // FUNCȚII AJUTĂTOARE 
   // =====================================================
 
   function sanitize(str){ 
     return String(str||'').trim(); 
   }
 
-  function isEmail(x){ 
-    return /@/.test(String(x||'')); 
-  }
-
+  // Obține Token-ul JWT din stocarea locală a browserului
   function getToken(){
     try{ return localStorage.getItem(TOKEN_KEY); }catch(e){ return null; }
   }
 
+  // Salvează sau șterge Token-ul
   function setToken(token){
     if(token){ localStorage.setItem(TOKEN_KEY, token); }
     else { localStorage.removeItem(TOKEN_KEY); }
   }
 
+  // Obține datele sumare despre utilizatorul logat (Nume, Email, ID)
   function getCurrentUser(){
     try{ return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }catch(e){ return null; }
   }
 
+  // Setează utilizatorul curent și anunță restul site-ului (Eveniment GLOBAL)
   function setCurrentUser(user){
     if(user){ 
       localStorage.setItem(SESSION_KEY, JSON.stringify({ 
@@ -47,15 +48,17 @@
     window.dispatchEvent(new CustomEvent('authChanged', { detail: { user: getCurrentUser() }}));
   }
 
+  // Curăță datele de sesiune (Logout)
   function clearAuth(){
     setToken(null);
     setCurrentUser(null);
   }
 
   // =====================================================
-  // AUTH API CALLS
+  // APELURI API - COMUNICARE CU SERVERUL NODE.JS
   // =====================================================
 
+  // Funcție de Înregistrare
   function register(username, email, password, nume_complet){
     return new Promise(function(resolve, reject){
       username = sanitize(username);

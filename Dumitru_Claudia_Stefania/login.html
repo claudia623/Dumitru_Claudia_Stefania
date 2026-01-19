@@ -64,7 +64,11 @@
         </div>
     </aside>
     <script defer src="auth-api.js"></script>
+    <script defer src="products-api.js"></script>
+    <script defer src="cart.js"></script>
+    <script defer src="site-ui.js"></script>
     <script>
+        // Comută vizibilitatea între formularul de Login și cel de Înregistrare
         function showRegister() {
             document.querySelector('.login-section').style.display = 'none';
             document.getElementById('register-section').style.display = 'block';
@@ -74,6 +78,7 @@
             document.getElementById('register-section').style.display = 'none';
         }
         
+        // Funcție internă de Toast pentru erori de login
         function toast(msg){ 
             var container = document.getElementById('site-toast-center');
             if(!container){
@@ -97,7 +102,7 @@
         }
         
         document.addEventListener('DOMContentLoaded', function(){
-            // If already logged in, show message
+            // Verificăm dacă suntem deja logați
             try{
                 var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
                 if(u){ toast('Ești deja autentificat ca ' + u.username); }
@@ -109,15 +114,31 @@
                     e.preventDefault();
                     var user = document.getElementById('username').value;
                     var pass = document.getElementById('password').value;
+                    
                     if(!window.auth || !window.auth.login){ return; }
+                    
+                    // Apelăm API-ul de login
                     window.auth.login(user, pass).then(function(){
                         toast('Bine ai venit!');
+                        
+                        // SINCRONIZARE COȘ: Mutăm produsele de la Guest la User-ul logat
+                        if(window.cartAPI && window.cartAPI.mergeCart){
+                            return window.cartAPI.mergeCart();
+                        }
+                    }).then(function(){
+                        // LOGICĂ REDIRECȚIONARE:
+                        // Dacă am venit dintr-o pagină anume (ex: Cart), ne întoarcem acolo.
+                        var urlParams = new URLSearchParams(window.location.search);
+                        var redirect = urlParams.get('redirect');
+                        
                         var pending = null;
                         try{ pending = JSON.parse(localStorage.getItem('pendingFavorite')||'null'); }catch(e){}
                         if(pending && pending.productId){
                           if(window.favoritesAPI && window.favoritesAPI.add) window.favoritesAPI.add(pending.productId);
                           localStorage.removeItem('pendingFavorite');
                           window.location.href = pending.returnURL || 'index.html';
+                        } else if(redirect){
+                          window.location.href = redirect;
                         } else {
                           window.location.href = 'index.html';
                         }
@@ -132,18 +153,22 @@
                     var ru = document.getElementById('reg-username').value;
                     var re = document.getElementById('reg-email').value;
                     var rp = document.getElementById('reg-password').value;
+                    
                     if(!window.auth || !window.auth.register){ return; }
+                    
+                    // Apelăm API-ul de înregistrare
                     window.auth.register(ru, re, rp).then(function(){
                         toast('Cont creat cu succes!');
-                        var pending = null;
-                        try{ pending = JSON.parse(localStorage.getItem('pendingFavorite')||'null'); }catch(e){}
-                        if(pending && pending.productId){
-                          if(window.favoritesAPI && window.favoritesAPI.add) window.favoritesAPI.add(pending.productId);
-                          localStorage.removeItem('pendingFavorite');
-                          window.location.href = pending.returnURL || 'index.html';
-                        } else {
-                          window.location.href = 'index.html';
+                        
+                        // SINCRONIZARE COȘ: Mutăm produsele de la Guest la noul User
+                        if(window.cartAPI && window.cartAPI.mergeCart){
+                            return window.cartAPI.mergeCart();
                         }
+                    }).then(function(){
+                        var urlParams = new URLSearchParams(window.location.search);
+                        var redirect = urlParams.get('redirect');
+                        if(redirect) window.location.href = redirect;
+                        else window.location.href = 'index.html';
                     }).catch(function(err){ toast(err && err.message ? err.message : 'Eroare la înregistrare'); });
                 });
             }

@@ -1,44 +1,51 @@
 (function(){
+    /* 
+       MANAGEMENT PRODUSE FAVORITE (WISHLIST)
+       Permite utilizatorilor să salveze plușurile preferate. 
+       Funcționează local (LocalStorage) și se sincronizează cu serverul dacă e logat.
+    */
     var KEY = 'favorites';
     var isAttachingHandlers = false;
     
+    // Citește lista de ID-uri favorite din memoria browserului
     function getFavorites(){ 
         try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }
         catch(e){ return []; } 
     }
     
+    // Salvează lista și anunță pagina de "Favorite" să se re-rendereze
     function save(list){ 
         localStorage.setItem(KEY, JSON.stringify(list)); 
-        // Only dispatch event if we're on favorites page
         if(document.getElementById('favorites-root')){
             window.dispatchEvent(new CustomEvent('favoritesUpdated',{detail:{favorites:list}})); 
         }
     }
     
+    // Adaugă un produs la favorite
     function add(id){
         if(!id) return Promise.resolve();
         var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
         var f = getFavorites();
         
-        // Already in favorites
+        // Verificăm dacă nu e deja în listă
         if(f.indexOf(String(id)) !== -1) {
             return Promise.resolve();
         }
         
-        // Add to localStorage first
         f.push(String(id));
         localStorage.setItem(KEY, JSON.stringify(f));
+        
         window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:'Adăugat la favorite', position:'center'}}));
+        
         if(document.getElementById('favorites-root')){
             renderFavoritesPage();
         }
         
-        // If logged in, sync to backend
+        // SINCRONIZARE SERVER: dacă e logat, salvăm și în DB
         if(u && window.productsAPI && window.productsAPI.addFavorite){
             return window.productsAPI.addFavorite(id)
                 .catch(function(err){
                     console.error('Error syncing favorite to backend:', err);
-                    // Already in localStorage, so it's ok
                 });
         }
         

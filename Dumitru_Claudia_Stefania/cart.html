@@ -118,6 +118,14 @@
                 });
             });
             var clearBtn = document.getElementById('clear-cart'); if(clearBtn) clearBtn.addEventListener('click', function(){ if(window.cartAPI && window.cartAPI.clearCart) window.cartAPI.clearCart(); else { localStorage.removeItem('cart'); window.dispatchEvent(new CustomEvent('cartUpdated',{detail:{cart:[]}})); } });
+            var checkoutBtn = document.getElementById('checkout-btn'); if(checkoutBtn) checkoutBtn.addEventListener('click', function(){
+                var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
+                if(!u){ 
+                    window.location.href = 'login.html?redirect=current-order.html';
+                } else {
+                    window.location.href = 'current-order.html';
+                }
+            });
             }).catch(function(err){ container.innerHTML = '<p style="color:red;text-align:center">Eroare la încărcarea coșului.</p>'; console.error(err); });
         }
         document.addEventListener('DOMContentLoaded', function(){ renderCart(); window.addEventListener('cartUpdated', function(){ renderCart(); }); });

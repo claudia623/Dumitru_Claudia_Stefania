@@ -1,15 +1,25 @@
 (function(){
+  /* 
+     MODUL AUTENTIFICARE LOCALĂ (BAZAT PE LOCALSTORAGE) 
+     Folosit ca alternativă la baza de date SQL pentru stocarea persistenta în browser.
+  */
   var USERS_KEY = 'users';
   var SESSION_KEY = 'currentUser';
 
+  // Încarcă toți utilizatorii înregistrați de pe acest computer
   function loadUsers(){
     try{ return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); }catch(e){ return []; }
   }
+  
+  // Salvează baza de date locală de utilizatori
   function saveUsers(list){ localStorage.setItem(USERS_KEY, JSON.stringify(list)); }
 
+  // Returnează user-ul logat în sesiunea curentă
   function getCurrentUser(){
     try{ return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }catch(e){ return null; }
   }
+  
+  // Actualizează sesiunea activă și anunță site-ul prin evenimente personalizate
   function setCurrentUser(user){
     if(user){ localStorage.setItem(SESSION_KEY, JSON.stringify({ id: user.id, username: user.username, email: user.email })); }
     else { localStorage.removeItem(SESSION_KEY); }
@@ -19,19 +29,21 @@
   function isEmail(x){ return /@/.test(String(x||'')); }
   function sanitize(str){ return String(str||'').trim(); }
 
+  /* ÎNREGISTRARE NOU UTILIZATOR */
   function register(username, email, password){
     return new Promise(function(resolve, reject){
       username = sanitize(username);
       email = sanitize(email).toLowerCase();
       password = String(password||'');
+      
       if(!username || !email || !password){ return reject(new Error('Completează toate câmpurile.')); }
+      
       var users = loadUsers();
+      // Validare unicitate
       if(users.some(function(u){ return u.username.toLowerCase() === username.toLowerCase(); })){
         return reject(new Error('Numele de utilizator este deja folosit.'));
       }
-      if(users.some(function(u){ return (u.email||'').toLowerCase() === email; })){
-        return reject(new Error('Există deja un cont cu acest email.'));
-      }
+      
       var newUser = { id: 'u_' + Date.now(), username: username, email: email, password: password };
       users.push(newUser);
       saveUsers(users);

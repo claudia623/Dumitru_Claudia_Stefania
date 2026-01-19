@@ -37,7 +37,10 @@
                                 var wrap = document.getElementById('products-wrap');
                                 if(!wrap) return;
                                 
-                                // Fetch products from API
+                                /* 
+                                   ÎNCĂRCARE DINAMICĂ PRODUSE
+                                   Apelăm API-ul pentru a prelua lista de plușuri din baza de date.
+                                */
                                 if(window.productsAPI && window.productsAPI.getProducts){
                                     window.productsAPI.getProducts().then(function(products){
                                         if(!products || products.length === 0){
@@ -45,6 +48,7 @@
                                             return;
                                         }
                                         
+                                        // Generăm cardurile de produs pentru fiecare element din listă
                                         products.forEach(function(p){
                                             var card = document.createElement('div');
                                             card.className = 'product-card';
@@ -52,11 +56,11 @@
                                             card.setAttribute('data-title', p.nume_produs);
                                             card.setAttribute('data-price', p.pret_unitar);
 
+                                            // Imaginea produsului cu link către pagina de detalii
                                             var imgLink = document.createElement('a'); 
                                             imgLink.className='product-link'; 
                                             imgLink.href = 'product.html?id='+encodeURIComponent(p.id_produs);
                                             var img = document.createElement('img'); 
-                                            // Use first image from API
                                             if(p.imagini && p.imagini.length > 0){
                                                 img.src = window.productsAPI.getProductImage(p.id_produs, p.imagini[0].id_imagine);
                                             }
@@ -73,6 +77,8 @@
                                             var price = document.createElement('p'); 
                                             price.className = 'price'; 
                                             price.textContent = 'Preț: ' + p.pret_unitar + ' lei';
+                                            
+                                            // Butoane de interacțiune
                                             var btn = document.createElement('button'); 
                                             btn.className='add-btn'; 
                                             btn.textContent='Adaugă în coș';
@@ -81,7 +87,7 @@
                                             fav.setAttribute('aria-label','Adaugă la favorite'); 
                                             fav.textContent = window.favoritesAPI && window.favoritesAPI.isFavorite && window.favoritesAPI.isFavorite(p.id_produs) ? '♥' : '♡';
 
-                                            // footer wrapper
+                                            // Footer-ul cardului pentru alinierea butoanelor (Cerința 5)
                                             var footer = document.createElement('div'); 
                                             footer.className = 'card-footer';
                                             footer.appendChild(btn); 
@@ -186,8 +192,8 @@
         </div>
     </footer>
     <script defer src="auth-api.js"></script>
+    <script defer src="products-api.js"></script>
     <script defer src="cart.js"></script>
     <script defer src="site-ui.js"></script>
-    <script defer src="products-api.js"></script>
 </body>
 </html>

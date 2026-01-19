@@ -49,51 +49,99 @@
     </div>
   </footer>
 
-  <script src="favorites.js"></script>
+  <script src="auth-api.js"></script>
   <script src="products-api.js"></script>
   <script src="cart.js"></script>
-  <script src="auth-api.js"></script>
   <script src="site-ui.js"></script>
+  <script src="favorites.js"></script>
   <script>
     (function(){
+      // Calculează totalul general al coșului pentru afișare în formular
       function total(cart){ return (cart||[]).reduce(function(s,i){ return s + Number((i.price||i.pret_unitar||0)) * Number((i.qty||i.cantitate||1)); }, 0); }
+      
+      // Funcție pentru afișarea de notificări (toast)
       function toast(m){ try{ window.dispatchEvent(new CustomEvent('siteToast',{detail:{message:m, position:'center'}})); }catch(e){} }
+
       document.addEventListener('DOMContentLoaded', function(){
+        // Verificăm dacă utilizatorul este logat. Cerința obligatorie pentru a plasa comanda.
         var u = window.auth && window.auth.getCurrentUser && window.auth.getCurrentUser();
         if(!u){ window.location.href = 'login.html'; return; }
+        
         var root = document.getElementById('order-root');
         if(!window.cartAPI || !window.cartAPI.getCart){ root.innerHTML = '<p>Nu poți plasa comanda în acest moment.</p>'; return; }
+        
+        // Preluăm produsele din coș pentru a le recapitula înainte de plasare
         window.cartAPI.getCart().then(function(cart){
           cart = cart || [];
-          if(!cart.length){ root.innerHTML = '<div class="login-section"><p>Nu ai produse în comanda curentă.</p><p style="margin-top:8px"><a class="user-menu-item" href="produse.html">Mergi la produse</a> sau <a class="user-menu-item" href="cart.html">vezi coșul</a>.</p></div>'; return; }
+          if(!cart.length){ root.innerHTML = '<div class="login-section"><p>Nu ai produse în comanda curentă.</p></div>'; return; }
 
           var sum = total(cart);
-          var html = '<div class="cart-card">';
-          html += '<table class="cart-list"><thead><tr><th>Produs</th><th>Cantitate</th><th>Preț</th><th>Total</th></tr></thead><tbody>';
-          cart.forEach(function(it){ var price = Number(it.price||it.pret_unitar||0), qty = Number(it.qty||it.cantitate||1), line = price * qty; html += '<tr><td>'+ (it.title||it.nume_produs||'') +'</td><td>'+ qty +'</td><td>'+ price +' lei</td><td>'+ line +' lei</td></tr>'; });
+          var html = '<div class="cart-card" style="max-width: 600px; margin: 0 auto;">';
+          html += '<h3>Produse în comandă</h3>';
+          html += '<table class="cart-list"><thead><tr><th>Produs</th><th>Cantitate</th><th>Total</th></tr></thead><tbody>';
+          cart.forEach(function(it){ 
+             var price = Number(it.price||it.pret_unitar||0), qty = Number(it.qty||it.cantitate||1), line = price * qty; 
+             html += '<tr><td>'+ (it.title||it.nume_produs||'') +'</td><td>'+ qty +'</td><td>'+ line +' lei</td></tr>'; 
+          });
           html += '</tbody></table>';
-          html += '<div style="margin-top:10px;text-align:right;font-weight:800">Total: '+ sum +' lei</div>';
-          html += '<div style="margin-top:14px;text-align:right"><a class="btn ghost" href="cart.html" style="margin-right:8px;padding:10px 12px;border:1px solid rgba(0,0,0,0.06);border-radius:8px;text-decoration:none;color:var(--accent);font-weight:800">Vezi coșul</a>'+
-                  '<button id="place-order" class="add-btn">Finalizează comanda</button></div>';
+          html += '<div style="margin-top:10px;text-align:right;font-weight:800;font-size:1.2rem;color:var(--accent);">Total de plată: '+ sum +' lei</div>';
+          
+          html += '<hr style="margin: 20px 0; border: 0; border-top: 1px solid rgba(0,0,0,0.06);">';
+          
+          // FORMULAR DE LIVRARE (Cerința 6 - Date introduse de utilizator)
+          html += '<h3>Detalii Livrare</h3>';
+          html += '<form id="checkout-form" style="display:flex; flex-direction:column; gap:12px; margin-top:15px;">' +
+                  '<div class="field"><label>Nume complet</label><input type="text" id="order-nume" required></div>' +
+                  '<div class="field"><label>Telefon</label><input type="tel" id="order-tel" required></div>' +
+                  '<div class="field"><label>Adresă livrare</label><textarea id="order-adresa" rows="2" required></textarea></div>' +
+                  '<div class="form-grid-2">' +
+                    '<div class="field"><label>Oraș</label><input type="text" id="order-oras" required></div>' +
+                    '<div class="field"><label>Cod poștal</label><input type="text" id="order-postal" required></div>' +
+                  '</div>' +
+                  '<div class="field"><label>Metodă plată</label><select id="order-plata"><option value="plata_la_livrare">Plată la livrare (Ramburs)</option><option value="card_online">Card Online</option></select></div>' +
+                  '<div style="margin-top:14px;text-align:right">' +
+                    '<a class="btn ghost" href="cart.html" style="margin-right:8px;padding:10px 12px;border:1px solid rgba(0,0,0,0.06);border-radius:8px;text-decoration:none;color:var(--accent);font-weight:800">Înapoi la coș</a>' +
+                    '<button type="submit" id="place-order" class="add-btn" style="min-width:180px">Plasează Comanda</button>' +
+                  '</div>' +
+                  '</form>';
           html += '</div>';
           root.innerHTML = html;
 
-          document.getElementById('place-order').addEventListener('click', function(){
-            if(!window.productsAPI || !window.productsAPI.createOrder){ toast('API comenzi indisponibil'); return; }
+          // PRE-COMPLETARE DATE din profilul salvat local (UX îmbunătățit)
+          var profile = JSON.parse(localStorage.getItem('profile_' + u.id_utilizator) || '{}');
+          if(profile.full_name) document.getElementById('order-nume').value = profile.full_name;
+          if(profile.phone) document.getElementById('order-tel').value = profile.phone;
+          if(profile.address) document.getElementById('order-adresa').value = profile.address;
+          if(profile.city) document.getElementById('order-oras').value = profile.city;
+
+          // SUBMIT FORMULAR - Trimite comanda către server
+          document.getElementById('checkout-form').addEventListener('submit', function(e){
+            e.preventDefault();
+            var btn = document.getElementById('place-order');
+            btn.disabled = true;
+            btn.textContent = 'Se procesează...';
+
+            if(!window.productsAPI || !window.productsAPI.createOrder){ toast('API comenzi indisponibil'); btn.disabled = false; return; }
+            
             window.productsAPI.createOrder({
-              nume_client: u.username,
+              nume_client: document.getElementById('order-nume').value,
               email_client: u.email,
-              telefon_client: '0722 000 000',
-              adresa_livrare: 'Str. Exemplu 1',
-              oras_livrare: 'Bucuresti',
-              cod_postal_livrare: '010010',
+              telefon_client: document.getElementById('order-tel').value,
+              adresa_livrare: document.getElementById('order-adresa').value,
+              oras_livrare: document.getElementById('order-oras').value,
+              cod_postal_livrare: document.getElementById('order-postal').value,
               tara_livrare: 'Romania',
-              metoda_plata: 'plata_la_livrare',
-              note: 'Comandă plasată din UI'
+              metoda_plata: document.getElementById('order-plata').value,
+              note: 'Comandă plasată din procesul de checkout.'
             }).then(function(){
-              toast('Comanda a fost plasată!');
-              window.location.href = 'orders.html';
-            }).catch(function(err){ toast(err.message || 'Eroare la plasarea comenzii'); });
+              toast('Comanda a fost trimisă cu succes!');
+              // Redirecționare către istoricul de comenzi
+              setTimeout(function(){ window.location.href = 'orders.html'; }, 1000);
+            }).catch(function(err){ 
+              toast(err.message || 'Eroare la plasarea comenzii'); 
+              btn.disabled = false; 
+              btn.textContent = 'Plasează Comanda';
+            });
           });
         }).catch(function(err){ root.innerHTML = '<p style="color:red">Eroare la încărcarea coșului.</p>'; console.error(err); });
       });

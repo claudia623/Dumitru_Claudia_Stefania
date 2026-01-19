@@ -1,7 +1,12 @@
 (function(){
+    /* 
+       SISTEM DE NOTIFICĂRI (TOAST)
+       Afișează mesaje temporare utilizatorului (ex: "Produs adăugat în coș")
+    */
     function notifyToast(message, position){
         position = position || 'bottom';
         if(position === 'center'){
+            // Notificare centrată (folosită pentru erori criticale sau checkout)
             var container = document.getElementById('site-toast-center');
             if(!container){
                 container = document.createElement('div');
@@ -24,6 +29,7 @@
             }, 2200);
             return;
         }
+        // Notificare standard (jos-stânga)
         var container = document.getElementById('site-toast');
         if(!container){
             container = document.createElement('div');
@@ -46,7 +52,10 @@
         }, 2200);
     }
 
-    
+    /* 
+       DIALOG DE CONFIRMARE CUSTOM
+       Înlocuiește window.confirm cu o variantă stilizată care returnează un Promise.
+    */
     function showConfirm(message){
         return new Promise(function(resolve){
             var overlay = document.createElement('div');
@@ -68,18 +77,34 @@
         });
     }
 
+    /* 
+       ACTUALIZARE BADGE COȘ
+       Calculează numărul total de produse din coș și actualizează cifra roșie de pe iconiță.
+    */
     function updateBadge(){
         try{
             var badge = document.getElementById('cart-badge');
             if(!badge) return;
-            var cart = (window.cartAPI && window.cartAPI.getCart) ? window.cartAPI.getCart() : [];
-            var count = 0;
-            if(cart && cart.length){ cart.forEach(function(i){ count += Number(i.qty||1); }); }
-            if(count <= 0){ badge.style.display = 'none'; }
-            else{ badge.style.display = 'inline-block'; badge.textContent = count; }
+            var cartPromise = (window.cartAPI && window.cartAPI.getCart) ? window.cartAPI.getCart() : Promise.resolve([]);
+            
+            if(cartPromise && typeof cartPromise.then === 'function'){
+                cartPromise.then(function(cart){
+                    renderBadge(badge, cart);
+                }).catch(function(){ renderBadge(badge, []); });
+            } else {
+                renderBadge(badge, cartPromise);
+            }
         }catch(e){ console.warn('updateBadge error', e); }
     }
 
+    function renderBadge(el, cart){
+        var count = 0;
+        if(cart && cart.length){ cart.forEach(function(i){ count += Number(i.qty || i.cantitate || 1); }); }
+        if(count <= 0){ el.style.display = 'none'; }
+        else{ el.style.display = 'inline-block'; el.textContent = count; }
+    }
+
+    // Ascultăm evenimentele globale pentru a actualiza interfața
     window.addEventListener('cartUpdated', updateBadge);
     window.addEventListener('siteToast', function(e){ notifyToast(e.detail.message, e.detail.position); });
 
@@ -87,13 +112,16 @@
         setTimeout(updateBadge, 150);
     });
 
-    // calculate header height and set CSS variable so layout compensates for fixed header
+    // calculate header + nav height and set CSS variables so layout compensates
     function refreshHeaderHeight(){
         try{
             var h = document.querySelector('header');
+            var n = document.querySelector('nav');
             if(!h) return;
             var hh = h.getBoundingClientRect().height;
+            var nh = n ? n.getBoundingClientRect().height : 0;
             document.documentElement.style.setProperty('--header-height', Math.ceil(hh) + 'px');
+            document.documentElement.style.setProperty('--total-header-height', Math.ceil(hh + nh) + 'px');
         }catch(e){ console.warn('refreshHeaderHeight err', e); }
     }
     window.addEventListener('load', refreshHeaderHeight);

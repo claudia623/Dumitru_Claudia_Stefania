@@ -1,15 +1,22 @@
+/* 
+   VARIABILE GLOBALE - Folosite pentru a menține consistența culorilor și a spațierii 
+   pe tot site-ul (Cerința 1 - CSS Modern)
+*/
 :root{
   --bg: #fff8f5;
   --card: #fff;
   --muted: #777;
-  --accent: #d4637a; /* pink-ish */
+  --accent: #d4637a; /* Culoarea roz-accent pentru butoane și link-uri */
   --accent-2: #f6c9d6;
   --shadow: rgba(22,22,22,0.08);
   --max-width: 1100px;
   --header-height: 92px;
 }
 
-/* Reset + base */
+/* 
+   RESET ȘI STILURI DE BAZĂ 
+   Setăm comportamentele corecte pentru mobile și ecrane mici (Cerința 4 - Fonturi relative)
+*/
 *{box-sizing:border-box}
 html{scroll-behavior: smooth;}
 html,body{height:100%;}
@@ -20,26 +27,33 @@ body{
   color:#222;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
-  line-height:1.6; /* Improved line height for mobile legibility - Req 4 */
-  padding-bottom:100px; /* reserve space for footer on short pages */
+  line-height:1.6; /* Spațiere îmbunătățită pentru lizibilitate (Cerința 4) */
+  padding-bottom:100px; /* Rezervăm spațiu pentru footer pe paginile scurte */
 }
 
-/* Responsive Images - Req 5 */
+/* 
+   IMAGINI RESPONSIVE 
+   Ne asigurăm că pozele produselor nu depășesc ecranul pe telefon (Cerința 5)
+*/
 img {
   max-width: 100%;
   height: auto;
   display: block;
-  margin: 0 auto; /* Centered by default on mobile - Req 5 */
+  margin: 0 auto; 
 }
 
 .container{
-  width:90%; /* Relative unit - Req 4 */
+  width:90%; /* Unități relative (%) pentru adaptabilitate */
   max-width:var(--max-width);
   margin:0 auto;
-  padding:1.5rem; /* Relative unit - Req 4 */
+  padding:1.5rem; /* Padding relativ (rem) */
 }
 
-/* Site layout using CSS Grid: header, nav, main, aside, footer */
+/* 
+   STRUCTURĂ LAYOUT CU CSS GRID (Cerința 1)
+   Definim cele 5 zone principale: header, nav, main, aside, footer.
+   Acestea se stivuiesc vertical pe mobil.
+*/
 .site-layout{
   display:grid;
   grid-template-columns: 1fr;
@@ -51,7 +65,7 @@ img {
     "aside"
     "footer";
   min-height:100vh;
-  padding-top: var(--header-height); /* reserve space for fixed header */
+  padding-top: var(--total-header-height, 140px); /* Evităm suprapunerea peste header-ul fixed */
 }
 .site-layout header{grid-area: header}
 .site-layout nav{grid-area: nav}
@@ -59,7 +73,10 @@ img {
 .site-layout aside{grid-area: aside; padding: 20px; background: rgba(0,0,0,0.02); }
 .site-layout footer{grid-area: footer}
 
-/* Desktop grid: Header, Nav, Main, Aside, Footer stack vertically but centered */
+/* 
+   ADAPTARE PENTRU DESKTOP (Min 900px) 
+   Reconfigurăm grid-ul și elementele pentru ecrane mari.
+*/
 @media (min-width: 900px){
   .site-layout{
     grid-template-columns: 1fr;
@@ -74,6 +91,7 @@ img {
   .site-layout nav{ 
     padding: 10px 0; 
   }
+  /* Newsletter-ul mutat într-o secțiune orizontală deasupra footer-ului */
   .site-layout aside{ 
     border-top: 1px solid rgba(0,0,0,0.05); 
     border-left: none;
@@ -89,42 +107,49 @@ img {
   .site-layout main{ padding: 20px 0; }
 }
 
-/* Header / nav */
+/* 
+   HEADER / NAV 
+   Elementele de branding și navigația principală.
+*/
 header{
   background:var(--card);
-  padding:20px 0;
+  padding:12px 0 8px 0; 
   text-align:center;
-  border-bottom:1px solid rgba(0,0,0,0.04);
+  border-bottom:none; 
 }
 
-/* Keep header visible on scroll: make it fixed and reserve space for content */
+/* 
+   POZIȚIONARE FIXĂ (Cerința 2)
+   Menținem Header-ul și Meniul fixate sus pentru accesibilitate rapidă pe orice pagină.
+*/
 header{
   position:fixed;
   top:0;
   left:0;
   right:0;
   z-index:150;
-  box-shadow: 0 6px 18px rgba(10,10,10,0.04);
+  box-shadow: 0 4px 12px rgba(10,10,10,0.03);
 }
 
 nav{
   background: var(--bg);
   border-bottom: 1px solid rgba(0,0,0,0.05);
-  position: sticky;
+  position: fixed;
   top: var(--header-height);
+  left: 0;
+  right: 0;
   z-index: 140;
-  padding: 10px 0;
+  padding: 6px 0; 
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
 }
 
 /* Ensure header children are centered within the fixed header */
 header > .container, header > * { max-width: var(--max-width); margin: 0 auto; padding: 0 18px; }
 header h1{ display:inline-block; vertical-align:middle; margin:0; font-size:1.6rem; color:var(--accent); }
 
-.nav-center{ display:flex; justify-content:center; flex:1; }
+.nav-center{ display:flex; justify-content:center; flex:1; padding-left: 140px; }
 .nav-right{ display:flex; align-items:center; gap:10px; padding-right: 15px; }
 nav a{color:var(--accent);text-decoration:none;margin:0 12px;font-weight:700}
 nav a:hover{color:var(--accent-2)}
@@ -276,7 +301,31 @@ footer{padding:18px 0;text-align:center;color:var(--muted);font-size:0.95rem;bac
 
 @media (max-width:600px){
   .site-footer .footer-grid{flex-direction:column}
-  .nav-right{position:static;justify-content:center;margin-top:12px}
+  
+  /* Ajustare Navigație Mobil (Cerința Layout Flexibil) */
+  nav {
+    flex-direction: column;
+    height: auto;
+    padding: 10px 0;
+  }
+  .nav-center {
+    padding-left: 0; /* Eliminăm decalajul de pe desktop */
+    margin-bottom: 8px;
+    width: 100%;
+    flex: none;
+  }
+  .nav-right {
+    position: static;
+    justify-content: center;
+    width: 100%;
+    padding-right: 0;
+    margin-top: 0;
+  }
+  nav a {
+    margin: 0 8px;
+    font-size: 0.9rem;
+  }
+  
   .product-card img{height:160px}
 }
 
