@@ -112,6 +112,13 @@ create table recenzii
         foreign key (id_produs) references produse (id_produs)
 );
 
+CREATE TABLE IF NOT EXISTS contact_mesaje (
+    id_mesaj INT AUTO_INCREMENT PRIMARY KEY,
+    nume VARCHAR(150) NOT NULL,
+    email VARCHAR(150) NOT NULL,
+    mesaj TEXT NOT NULL,
+    data_trimitere TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 create index id_utilizator
     on recenzii (id_utilizator);
 

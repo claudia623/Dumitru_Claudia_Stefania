@@ -26,7 +26,13 @@ const SALT_ROUNDS = 10;
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(cors());
+app.use(cors({ origin: '*' }));
+
+// Log all requests
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
 // Simple health check
 app.get('/health', (req, res) => {
@@ -79,9 +85,9 @@ const upload = multer({
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 3306,
+  port: process.env.DB_PORT || 3307,
   user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
+  password: process.env.DB_PASSWORD || 'root',
   database: process.env.DB_NAME || 'magazine_plusuri',
   waitForConnections: true,
   connectionLimit: 10,
@@ -178,10 +184,16 @@ app.post('/api/auth/login', async (req, res) => {
 
     const conn = await pool.getConnection();
 
-    const [users] = await conn.query(
-      'SELECT id_utilizator, username, email, parola_hash, rol FROM utilizatori WHERE (username = ? OR email = ?) AND activ = 1',
-      [usernameOrEmail, usernameOrEmail]
-    );
+    // Detect columns to handle both schema versions
+    const [cols] = await conn.query('SHOW COLUMNS FROM utilizatori');
+    const fields = cols.map(c => c.Field);
+    const passField = fields.includes('parola_hash') ? 'parola_hash' : 'parola';
+    const hasActiv = fields.includes('activ');
+
+    let query = `SELECT id_utilizator, username, email, ${passField} as pass, rol FROM utilizatori WHERE (username = ? OR email = ?)`;
+    if (hasActiv) query += ' AND activ = 1';
+
+    const [users] = await conn.query(query, [usernameOrEmail, usernameOrEmail]);
 
     if (users.length === 0) {
       conn.release();
@@ -189,7 +201,20 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     const user = users[0];
-    const paroleMatch = await bcrypt.compare(parola, user.parola_hash);
+    
+    // Check if password matches (trying both hashed and plain text if needed)
+    let paroleMatch = false;
+    try {
+        paroleMatch = await bcrypt.compare(parola, user.pass);
+    } catch(e) {
+        // Fallback for plain text passwords in old schema
+        paroleMatch = (parola === user.pass);
+    }
+    
+    // Final check - if bcrypt fails it might just be the hash is not a hash
+    if (!paroleMatch && parola === user.pass) {
+        paroleMatch = true;
+    }
 
     if (!paroleMatch) {
       conn.release();
@@ -302,7 +327,16 @@ app.post('/api/auth/change-password', verifyToken, async (req, res) => {
 app.get('/api/produse', async (req, res) => {
   try {
     const { id_categorie, search, page = 1, limit = 20 } = req.query;
-    let query = 'SELECT * FROM produse WHERE activ = 1';
+    const conn = await pool.getConnection();
+    
+    // Check if activ column exists
+    const [cols] = await conn.query('SHOW COLUMNS FROM produse');
+    const fields = cols.map(c => c.Field);
+    const hasActiv = fields.includes('activ');
+
+    let query = 'SELECT * FROM produse WHERE 1=1';
+    if (hasActiv) query += ' AND activ = 1';
+    
     let params = [];
 
     if (id_categorie) {
@@ -315,27 +349,29 @@ app.get('/api/produse', async (req, res) => {
       params.push(`%${search}%`, `%${search}%`);
     }
 
-    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    query += ' ORDER BY id_produs DESC LIMIT ? OFFSET ?';
     const offset = (page - 1) * limit;
     params.push(parseInt(limit), parseInt(offset));
 
-    const conn = await pool.getConnection();
     const [produse] = await conn.query(query, params);
 
-    // Get images for each product
-    for (let produs of produse) {
-      const [imagini] = await conn.query(
-        'SELECT id_imagine, mime_type, ordinea FROM imagini_produse WHERE id_produs = ? ORDER BY ordinea',
-        [produs.id_produs]
-      );
-      produs.imagini = imagini;
+    // Get images for each product (only if table exists)
+    const [tables] = await conn.query("SHOW TABLES LIKE 'imagini_produse'");
+    if (tables.length > 0) {
+      for (let produs of produse) {
+        const [imagini] = await conn.query(
+          'SELECT id_imagine, mime_type, ordinea FROM imagini_produse WHERE id_produs = ? ORDER BY ordinea',
+          [produs.id_produs]
+        );
+        produs.imagini = imagini;
+      }
     }
 
     conn.release();
     res.json(produse);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Eroare server' });
+    console.error('API PRODUSE ERROR:', err);
+    res.status(500).json({ error: 'Eroare server la preluarea produselor' });
   }
 });
 
@@ -425,20 +461,52 @@ app.get('/api/produse/:id/imagini/:id_imagine', async (req, res) => {
 // ADD PRODUS (ADMIN)
 app.post('/api/produse', verifyToken, verifyAdmin, upload.array('imagini', 10), async (req, res) => {
   try {
-    const { nume_produs, descriere, pret_unitar, pret_reducere, stoc, id_categorie, culori_disponibile, timp_livrare_zile, material, marime, greutate } = req.body;
+    const { 
+      nume_produs, descriere, pret_unitar, pret_reducere, stoc, 
+      id_categorie, culori_disponibile, timp_livrare_zile, 
+      material, marime, greutate 
+    } = req.body;
 
     const conn = await pool.getConnection();
 
-    const [result] = await conn.query(
-      `INSERT INTO produse (nume_produs, descriere, pret_unitar, pret_reducere, stoc, id_categorie, culori_disponibile, timp_livrare_zile, material, marime, greutate)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [nume_produs, descriere, pret_unitar, pret_reducere || null, stoc, id_categorie || null, culori_disponibile, timp_livrare_zile || 7, material, marime, greutate]
-    );
+    // Verificăm coloanele disponibile în tabela produse
+    const [cols] = await conn.query('SHOW COLUMNS FROM produse');
+    const fields = cols.map(c => c.Field);
+    
+    const hasPretUnitar = fields.includes('pret_unitar');
+    const hasGreutate = fields.includes('greutate');
+    const hasMaterial = fields.includes('material');
+    const hasMarime = fields.includes('marime');
+
+    // Construim query-ul dinamic în funcție de structura tabelei utilizatorului
+    let queryFields = ['nume_produs', 'descriere', 'stoc', 'id_categorie'];
+    let queryValues = [nume_produs, descriere, stoc || 0, id_categorie || null];
+    let placeholders = ['?', '?', '?', '?'];
+
+    if (hasPretUnitar) {
+      queryFields.push('pret_unitar', 'pret_reducere');
+      queryValues.push(pret_unitar, pret_reducere || null);
+      placeholders.push('?', '?');
+    } else if (fields.includes('pret')) {
+      queryFields.push('pret');
+      queryValues.push(pret_unitar);
+      placeholders.push('?');
+    }
+
+    if (hasGreutate) { queryFields.push('greutate'); queryValues.push(greutate || null); placeholders.push('?'); }
+    if (hasMaterial) { queryFields.push('material'); queryValues.push(material || null); placeholders.push('?'); }
+    if (hasMarime) { queryFields.push('marime'); queryValues.push(marime || null); placeholders.push('?'); }
+    if (fields.includes('culori_disponibile')) { queryFields.push('culori_disponibile'); queryValues.push(culori_disponibile || null); placeholders.push('?'); }
+    if (fields.includes('timp_livrare_zile')) { queryFields.push('timp_livrare_zile'); queryValues.push(timp_livrare_zile || 7); placeholders.push('?'); }
+
+    const sql = `INSERT INTO produse (${queryFields.join(', ')}) VALUES (${placeholders.join(', ')})`;
+    const [result] = await conn.query(sql, queryValues);
 
     const produs_id = result.insertId;
 
-    // Insert imagini
-    if (req.files && req.files.length > 0) {
+    // Verificăm dacă există tabela de imagini (imagini_produse)
+    const [tables] = await conn.query("SHOW TABLES LIKE 'imagini_produse'");
+    if (tables.length > 0 && req.files && req.files.length > 0) {
       for (let i = 0; i < req.files.length; i++) {
         const file = req.files[i];
         await conn.query(
@@ -446,13 +514,19 @@ app.post('/api/produse', verifyToken, verifyAdmin, upload.array('imagini', 10), 
           [produs_id, file.buffer, file.mimetype, file.originalname, i]
         );
       }
+    } else if (fields.includes('imagine') && req.files && req.files.length > 0) {
+      // Dacă există doar coloana 'imagine' în tabela produse (schema veche)
+      // Salvăm doar numele/referința (sau putem implementa salvare pe disc, dar aici avem BLOB în rest)
+      await conn.query('UPDATE produse SET imagine = ? WHERE id_produs = ?', [req.files[0].originalname, produs_id]);
     }
 
     conn.release();
-    res.status(201).json({ message: 'Produs adăugat', id_produs: produs_id });
+    res.status(201).json({ message: 'Produs adăugat cu succes', id_produs: produs_id });
   } catch (err) {
+    console.error('--- ADD PRODUCT ERROR STACK ---');
     console.error(err);
-    res.status(500).json({ error: 'Eroare server' });
+    console.error('--------------------------------');
+    res.status(500).json({ error: 'Eroare server la adăugarea produsului: ' + err.message });
   }
 });
 
@@ -931,11 +1005,81 @@ app.get('/api/categorii', async (req, res) => {
 });
 
 // =====================================================
+// NEWSLETTER
+// =====================================================
+
+app.post('/api/newsletter/subscribe', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email necesar' });
+    
+    const conn = await pool.getConnection();
+    await conn.query('INSERT IGNORE INTO newsletter_subscribers (email) VALUES (?)', [email]);
+    conn.release();
+    res.json({ message: 'Te-ai abonat cu succes!' });
+  } catch (err) {
+    // Dacă tabelul nu există, îl creăm on-the-fly (pentru simplitate în demo)
+    if (err.code === 'ER_NO_SUCH_TABLE') {
+      const conn = await pool.getConnection();
+      await conn.query('CREATE TABLE IF NOT EXISTS newsletter_subscribers (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(255) UNIQUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)');
+      await conn.query('INSERT IGNORE INTO newsletter_subscribers (email) VALUES (?)', [req.body.email]);
+      conn.release();
+      return res.json({ message: 'Te-ai abonat cu succes!' });
+    }
+    console.error(err);
+    res.status(500).json({ error: 'Eroare server' });
+  }
+});
+
+// CONTACT FORM
+// =====================================================
+
+app.post('/api/contact', async (req, res) => {
+  try {
+    const { nume, email, mesaj } = req.body;
+    if (!nume || !email || !mesaj) {
+      return res.status(400).json({ error: 'Toate câmpurile sunt obligatorii' });
+    }
+
+    const conn = await pool.getConnection();
+    
+    // Asigură-te că tabelul există (on-the-fly pentru demo)
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS contact_mesaje (
+        id_mesaj INT AUTO_INCREMENT PRIMARY KEY,
+        nume VARCHAR(150) NOT NULL,
+        email VARCHAR(150) NOT NULL,
+        mesaj TEXT NOT NULL,
+        data_trimitere TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await conn.query(
+      'INSERT INTO contact_mesaje (nume, email, mesaj) VALUES (?, ?, ?)',
+      [nume, email, mesaj]
+    );
+
+    conn.release();
+    res.json({ message: 'Mesajul tău a fost trimis! Îți vom răspunde cât mai curând.' });
+  } catch (err) {
+    console.error('CONTACT ERROR:', err);
+    res.status(500).json({ error: 'Eroare server la trimiterea mesajului' });
+  }
+});
+
+// =====================================================
 // START SERVER
 // =====================================================
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
+  try {
+    const conn = await pool.getConnection();
+    console.log('Successfully connected to MySQL Database on port 3307');
+    conn.release();
+  } catch (err) {
+    console.error('DATABASE CONNECTION ERROR:', err.message);
+  }
 });
 
 module.exports = app;

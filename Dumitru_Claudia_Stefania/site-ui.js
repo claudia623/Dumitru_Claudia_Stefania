@@ -213,4 +213,81 @@
             window.scrollTo({top:0,behavior:'smooth'});
         });
     })();
+
+    /* 
+       GESTIONARE NEWSLETTER
+       Trimite email-ul către backend pentru abonare
+    */
+    document.addEventListener('click', function(e){
+        var btn = e.target.closest && e.target.closest('.newsletter-box button');
+        if(!btn) return;
+        
+        var box = btn.closest('.newsletter-box');
+        var input = box.querySelector('input[type="email"]');
+        var email = input ? input.value : '';
+        
+        if(!email || !email.includes('@')){
+            window.dispatchEvent(new CustomEvent('siteToast', { detail: { message: 'Te rugăm să introduci un email valid.', position: 'center' }}));
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Trimitere...';
+
+        fetch('http://127.0.0.1:3000/api/newsletter/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
+        })
+        .then(res => res.json())
+        .then(data => {
+            window.dispatchEvent(new CustomEvent('siteToast', { detail: { message: data.message || 'Te-ai abonat!', position: 'center' }}));
+            if(input) input.value = '';
+        })
+        .catch(err => {
+            window.dispatchEvent(new CustomEvent('siteToast', { detail: { message: 'Eroare la abonare. Încearcă mai târziu.', position: 'center' }}));
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.textContent = 'Abonează-te';
+        });
+    });
+
+    /* 
+       GESTIONARE FORMULAR CONTACT
+       Trimite mesajele către baza de date
+    */
+    document.addEventListener('submit', function(e){
+        var form = e.target.closest('#contact-form');
+        if(!form) return;
+        e.preventDefault();
+
+        var btn = form.querySelector('button[type="submit"]');
+        var nume = form.querySelector('#contact-name').value;
+        var email = form.querySelector('#contact-email').value;
+        var mesaj = form.querySelector('#contact-message').value;
+
+        btn.disabled = true;
+        var originalText = btn.textContent;
+        btn.textContent = 'Se trimite...';
+
+        fetch('http://127.0.0.1:3000/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nume, email, mesaj })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.error) throw new Error(data.error);
+            window.dispatchEvent(new CustomEvent('siteToast', { detail: { message: data.message, position: 'center' }}));
+            form.reset();
+        })
+        .catch(err => {
+            window.dispatchEvent(new CustomEvent('siteToast', { detail: { message: 'Eroare: ' + err.message, position: 'center' }}));
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        });
+    });
 })();

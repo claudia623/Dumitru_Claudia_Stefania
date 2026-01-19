@@ -4,7 +4,7 @@
 // =====================================================
 
 (function(){
-  const API_BASE = 'http://localhost:3000/api';
+  const API_BASE = 'http://127.0.0.1:3000/api';
   var SESSION_KEY = 'currentUser';
   var TOKEN_KEY = 'auth_token';
 
@@ -209,6 +209,20 @@
         aHistory.className='user-menu-item'; 
         aHistory.href='orders.html'; 
         aHistory.textContent='Istoric comenzi';
+
+        // ACCES ADMIN: Dacă utilizatorul are rolul de 'admin', îi arătăm link-ul către adăugare produse
+        if(user.rol === 'admin'){
+          var adminDiv = document.createElement('div');
+          adminDiv.className = 'menu-divider';
+          dd.appendChild(adminDiv);
+          
+          var aAdminAdd = document.createElement('a');
+          aAdminAdd.className = 'user-menu-item';
+          aAdminAdd.href = 'admin-add-product.html';
+          aAdminAdd.innerHTML = '➕ Adaugă Produs Nou';
+          dd.appendChild(aAdminAdd);
+        }
+
         var div = document.createElement('div'); 
         div.className='menu-divider';
         var lo = document.createElement('button'); 

@@ -29,11 +29,11 @@
         <section style="text-align:center; margin-top:40px;">
             <h2>Contact</h2>
             <p>Dacă vrei să ne trimiți un mesaj, folosește formularul de mai jos — datele de contact sunt afișate în subsolul site-ului.</p>
-            <form style="max-width:350px;margin:30px auto 0 auto;display:flex;flex-direction:column;gap:15px;background:#fff;padding:25px;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-                <input type="text" placeholder="Nume" required>
-                <input type="email" placeholder="Email" required>
-                <textarea placeholder="Mesajul tău" rows="4" required></textarea>
-                <button type="submit" style="background:#e0b7b7;color:#fff;border:none;padding:12px;border-radius:6px;font-size:1em;font-weight:bold;cursor:pointer;">Trimite</button>
+            <form id="contact-form" style="max-width:350px;margin:30px auto 0 auto;display:flex;flex-direction:column;gap:15px;background:#fff;padding:25px;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+                <input type="text" id="contact-name" name="nume" placeholder="Nume" required>
+                <input type="email" id="contact-email" name="email" placeholder="Email" required>
+                <textarea id="contact-message" name="mesaj" placeholder="Mesajul tău" rows="4" required></textarea>
+                <button type="submit" id="contact-submit" style="background:#e0b7b7;color:#fff;border:none;padding:12px;border-radius:6px;font-size:1em;font-weight:bold;cursor:pointer;">Trimite</button>
             </form>
         </section>
     </main>
