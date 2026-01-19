@@ -59,18 +59,41 @@ img {
 .site-layout aside{grid-area: aside; padding: 20px; background: rgba(0,0,0,0.02); }
 .site-layout footer{grid-area: footer}
 
-/* Desktop grid: main + aside side-by-side */
+/* Desktop grid: Header, Nav, Main, Aside, Footer stack vertically but centered */
 @media (min-width: 900px){
   .site-layout{
-    grid-template-columns: 200px 1fr 250px;
-    grid-template-rows: auto 1fr auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr auto auto;
     grid-template-areas:
-      "header header header"
-      "nav main aside"
-      "footer footer footer";
+      "header"
+      "nav"
+      "main"
+      "aside"
+      "footer";
   }
-  .site-layout nav{align-self:start; padding: 20px 0;}
-  .site-layout aside{border-left: 1px solid rgba(0,0,0,0.05);}
+  .site-layout nav{ 
+    padding: 10px 0; 
+    display: flex; 
+    justify-content: center; 
+    background: var(--bg);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    position: sticky;
+    top: var(--header-height);
+    z-index: 140;
+  }
+  .site-layout aside{ 
+    border-top: 1px solid rgba(0,0,0,0.05); 
+    border-left: none;
+    padding: 40px 0; 
+    margin-top: 40px;
+    background: rgba(212,99,122,0.03);
+  }
+  .site-layout aside .newsletter-box {
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .site-layout main{ padding: 20px 0; }
 }
 
 /* Header / nav */
